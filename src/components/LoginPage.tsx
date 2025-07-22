@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTranslation } from 'react-i18next';
+import { useI18n } from '@/lib/i18n';
 import { Building2, User, Lock, Mail, UserPlus, LogIn } from 'lucide-react';
 
 export default function LoginPage() {
   const { signIn, signUp } = useAuth();
-  const { t } = useTranslation();
+  const { t } = useI18n();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

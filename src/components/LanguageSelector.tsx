@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useI18n } from '@/lib/i18n';
 import { Globe, ChevronDown } from 'lucide-react';
 
 const LanguageSelector = () => {
-  const { i18n, t } = useTranslation();
+  const { language, setLanguage, t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
 
   const languages = [
@@ -15,10 +15,10 @@ const LanguageSelector = () => {
   ];
 
   const currentLanguage =
-    languages.find(lang => lang.code === i18n.language) || languages[1];
+    languages.find(lang => lang.code === language) || languages[1];
 
   const handleLanguageChange = (languageCode: string) => {
-    i18n.changeLanguage(languageCode);
+    setLanguage(languageCode as 'es' | 'en' | 'sw');
     setIsOpen(false);
   };
 
@@ -47,14 +47,14 @@ const LanguageSelector = () => {
                 key={language.code}
                 onClick={() => handleLanguageChange(language.code)}
                 className={`w-full flex items-center space-x-3 px-4 py-2 text-sm hover:bg-gray-100 transition-colors ${
-                  i18n.language === language.code
+                  language === language.code
                     ? 'bg-blue-50 text-blue-700'
                     : 'text-gray-700'
                 }`}
               >
                 <span className='text-lg'>{language.flag}</span>
                 <span>{language.name}</span>
-                {i18n.language === language.code && (
+                {language === language.code && (
                   <div className='ml-auto w-2 h-2 bg-blue-600 rounded-full'></div>
                 )}
               </button>
