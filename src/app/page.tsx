@@ -3,6 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import LoginPage from '@/components/LoginPage';
 import Dashboard from '@/components/Dashboard';
+import LanguageSelector from '@/components/LanguageSelector';
 
 export default function Home() {
   const { user, appUser, loading } = useAuth();
@@ -19,11 +20,19 @@ export default function Home() {
     );
   }
 
-  // Si no hay usuario autenticado, mostrar página de login
+  // Si no hay usuario autenticado, mostrar página de login con selector de idioma
   if (!user || !appUser) {
-    return <LoginPage />;
+    return (
+      <div className='min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100'>
+        {/* Header con selector de idioma */}
+        <div className='absolute top-4 right-4 z-10'>
+          <LanguageSelector />
+        </div>
+        <LoginPage />
+      </div>
+    );
   }
 
-  // Si el usuario está autenticado y no necesita cambiar contraseña, mostrar dashboard
+  // Si el usuario está autenticado, mostrar dashboard
   return <Dashboard />;
 }

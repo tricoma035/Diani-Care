@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { Building2, User, Lock, Mail, UserPlus, LogIn } from 'lucide-react';
 
 export default function LoginPage() {
   const { signIn, signUp } = useAuth();
+  const { t } = useTranslation();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -45,22 +47,22 @@ export default function LoginPage() {
         // Manejar errores específicos de Supabase
         if (error instanceof Error) {
           if (error.message.includes('Invalid login credentials')) {
-            setError('Email o contraseña incorrectos');
+            setError(t('auth.invalidCredentials'));
           } else if (error.message.includes('Email not confirmed')) {
-            setError('Por favor, verifica tu email antes de iniciar sesión');
+            setError(t('auth.emailNotConfirmed'));
           } else if (error.message.includes('Too many requests')) {
-            setError('Demasiados intentos. Intenta de nuevo en unos minutos');
+            setError(t('auth.tooManyRequests'));
           } else {
             setError(error.message);
           }
         } else {
-          setError('Error al iniciar sesión');
+          setError(t('errors.general'));
         }
       } else {
-        setSuccess('Inicio de sesión exitoso');
+        setSuccess(t('auth.loginSuccess'));
       }
     } catch (error) {
-      setError('Error inesperado al iniciar sesión');
+      setError(t('errors.general'));
     } finally {
       setLoading(false);
     }
@@ -86,21 +88,19 @@ export default function LoginPage() {
         // Manejar errores específicos de Supabase
         if (error instanceof Error) {
           if (error.message.includes('User already registered')) {
-            setError('Este email ya está registrado');
+            setError(t('auth.userAlreadyExists'));
           } else if (error.message.includes('Password should be at least')) {
-            setError('La contraseña debe tener al menos 6 caracteres');
+            setError(t('validation.minLength', { min: 6 }));
           } else if (error.message.includes('Invalid email')) {
-            setError('Email inválido');
+            setError(t('validation.email'));
           } else {
             setError(error.message);
           }
         } else {
-          setError('Error al registrar usuario');
+          setError(t('errors.general'));
         }
       } else {
-        setSuccess(
-          'Usuario registrado exitosamente. Por favor, verifica tu email para confirmar la cuenta antes de iniciar sesión.'
-        );
+        setSuccess(t('auth.registerSuccess'));
         // Limpiar formulario
         setRegisterEmail('');
         setRegisterPassword('');
@@ -145,7 +145,7 @@ export default function LoginPage() {
             >
               <div className='flex items-center justify-center space-x-2'>
                 <LogIn className='h-4 w-4' />
-                <span>Iniciar Sesión</span>
+                <span>{t('auth.login')}</span>
               </div>
             </button>
             <button
@@ -158,7 +158,7 @@ export default function LoginPage() {
             >
               <div className='flex items-center justify-center space-x-2'>
                 <UserPlus className='h-4 w-4' />
-                <span>Registrarse</span>
+                <span>{t('auth.register')}</span>
               </div>
             </button>
           </div>

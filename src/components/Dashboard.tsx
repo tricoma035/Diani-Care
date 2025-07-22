@@ -13,8 +13,8 @@ import {
 } from 'lucide-react';
 import PatientList from './PatientList';
 import PatientModal from './PatientModal';
-
 import PatientDetail from './PatientDetail';
+import LanguageSelector from './LanguageSelector';
 
 type SortOption = 'full_name' | 'created_at';
 type SortOrder = 'asc' | 'desc';
@@ -178,6 +178,7 @@ export default function Dashboard() {
             </div>
 
             <div className='flex items-center space-x-4'>
+              <LanguageSelector />
               <button
                 onClick={signOut}
                 className='flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors'
