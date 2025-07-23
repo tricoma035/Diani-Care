@@ -82,12 +82,15 @@ export default function Chatbot({ onClose }: ChatbotProps) {
   useEffect(() => {
     if (!appUser) return;
     setLoadingConvs(true);
-    supabase
-      .from('chatbot_conversations')
-      .select('*')
-      .eq('user_id', appUser.id)
-      .order('created_at', { ascending: false })
-      .then(({ data }) => {
+
+    const loadConversations = async () => {
+      try {
+        const { data } = await supabase
+          .from('chatbot_conversations')
+          .select('*')
+          .eq('user_id', appUser.id)
+          .order('created_at', { ascending: false });
+
         setConversations(data || []);
         if (data && data.length > 0) {
           setActiveConvId(data[0].id);
@@ -98,8 +101,14 @@ export default function Chatbot({ onClose }: ChatbotProps) {
           setActiveConvId(null);
           setMessages([{ role: 'bot', text: t('chatbot.welcome') }]);
         }
-      })
-      .finally(() => setLoadingConvs(false));
+      } catch (error) {
+        console.error('Error loading conversations:', error);
+      } finally {
+        setLoadingConvs(false);
+      }
+    };
+
+    loadConversations();
   }, [appUser, language]);
 
   // Guardar conversación actual al cerrar
@@ -251,7 +260,11 @@ export default function Chatbot({ onClose }: ChatbotProps) {
     if (!input.trim()) return;
     setError('');
     setLoading(true);
-    setMessages(msgs => [...msgs, { role: 'user', text: input }]);
+
+    // Añadir mensaje del usuario al estado local
+    const userMessage = { role: 'user' as const, text: input };
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setInput('');
 
     try {
@@ -273,7 +286,24 @@ export default function Chatbot({ onClose }: ChatbotProps) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error');
-      setMessages(msgs => [...msgs, { role: 'bot', text: data.content }]);
+
+      // Añadir respuesta del bot al estado local
+      const botMessage = { role: 'bot' as const, text: data.content };
+      const finalMessages = [...updatedMessages, botMessage];
+      setMessages(finalMessages);
+
+      // Guardar conversación automáticamente en la base de datos
+      if (appUser && activeConvId) {
+        try {
+          await supabase
+            .from('chatbot_conversations')
+            .update({ messages: finalMessages })
+            .eq('id', activeConvId);
+        } catch (saveError) {
+          console.error('Error guardando conversación:', saveError);
+          setError('Error al guardar la conversación');
+        }
+      }
     } catch (err: any) {
       setError(err.message || 'Error');
     } finally {
