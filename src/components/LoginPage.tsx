@@ -39,12 +39,9 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     setSuccess('');
-
     try {
       const { error } = await signIn(loginEmail, loginPassword);
-
       if (error) {
-        // Manejar errores específicos de Supabase
         if (error instanceof Error) {
           if (error.message.includes('Invalid login credentials')) {
             setError(t('auth.invalidCredentials'));
@@ -62,7 +59,7 @@ export default function LoginPage() {
         setSuccess(t('auth.loginSuccess'));
       }
     } catch (error) {
-      setError(t('errors.general'));
+      setError('Error inesperado al iniciar sesión');
     } finally {
       setLoading(false);
     }
@@ -73,7 +70,6 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     setSuccess('');
-
     try {
       const { error } = await signUp(
         registerEmail,
@@ -83,9 +79,7 @@ export default function LoginPage() {
         registerHospital,
         registerJobPosition
       );
-
       if (error) {
-        // Manejar errores específicos de Supabase
         if (error instanceof Error) {
           if (error.message.includes('User already registered')) {
             setError(t('auth.userAlreadyExists'));
@@ -101,7 +95,6 @@ export default function LoginPage() {
         }
       } else {
         setSuccess(t('auth.registerSuccess'));
-        // Limpiar formulario
         setRegisterEmail('');
         setRegisterPassword('');
         setRegisterFullName('');
@@ -125,13 +118,10 @@ export default function LoginPage() {
             <Building2 className='h-8 w-8 text-white' />
           </div>
           <h1 className='text-3xl font-bold text-gray-900 mb-2'>
-            Sistema Hospitalario
+            {t('auth.title')}
           </h1>
-          <p className='text-gray-600'>
-            Gestión de pacientes y profesionales médicos
-          </p>
+          <p className='text-gray-600'>{t('auth.subtitle')}</p>
         </div>
-
         {/* Tabs */}
         <div className='bg-white rounded-lg shadow-xl overflow-hidden'>
           <div className='flex'>
@@ -162,14 +152,13 @@ export default function LoginPage() {
               </div>
             </button>
           </div>
-
           <div className='p-6'>
             {/* Login Form */}
             {isLogin ? (
               <form onSubmit={handleLogin} className='space-y-4'>
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Email
+                    {t('auth.email')}
                   </label>
                   <div className='relative'>
                     <Mail className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
@@ -178,16 +167,17 @@ export default function LoginPage() {
                       value={loginEmail}
                       onChange={e => setLoginEmail(e.target.value)}
                       className='w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                      placeholder='usuario@hospital.com'
+                      placeholder={t('auth.emailPlaceholder', {
+                        defaultValue: 'usuario@hospital.com',
+                      })}
                       required
                       autoComplete='email'
                     />
                   </div>
                 </div>
-
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Contraseña
+                    {t('auth.password')}
                   </label>
                   <div className='relative'>
                     <Lock className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
@@ -196,19 +186,24 @@ export default function LoginPage() {
                       value={loginPassword}
                       onChange={e => setLoginPassword(e.target.value)}
                       className='w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                      placeholder='••••••••'
+                      placeholder={t('auth.passwordPlaceholder', {
+                        defaultValue: '••••••••',
+                      })}
                       required
                       autoComplete='current-password'
                     />
                   </div>
                 </div>
-
                 <button
                   type='submit'
                   disabled={loading}
                   className='w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
                 >
-                  {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+                  {loading
+                    ? t('auth.loggingIn', {
+                        defaultValue: 'Iniciando sesión...',
+                      })
+                    : t('auth.login')}
                 </button>
               </form>
             ) : (
@@ -216,7 +211,7 @@ export default function LoginPage() {
               <form onSubmit={handleRegister} className='space-y-4'>
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Email
+                    {t('auth.email')}
                   </label>
                   <div className='relative'>
                     <Mail className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
@@ -225,16 +220,17 @@ export default function LoginPage() {
                       value={registerEmail}
                       onChange={e => setRegisterEmail(e.target.value)}
                       className='w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                      placeholder='usuario@hospital.com'
+                      placeholder={t('auth.emailPlaceholder', {
+                        defaultValue: 'usuario@hospital.com',
+                      })}
                       required
                       autoComplete='email'
                     />
                   </div>
                 </div>
-
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Nombre Completo
+                    {t('auth.fullName')}
                   </label>
                   <div className='relative'>
                     <User className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
@@ -243,16 +239,17 @@ export default function LoginPage() {
                       value={registerFullName}
                       onChange={e => setRegisterFullName(e.target.value)}
                       className='w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                      placeholder='Juan Pérez'
+                      placeholder={t('auth.fullNamePlaceholder', {
+                        defaultValue: 'Juan Pérez',
+                      })}
                       required
                       autoComplete='name'
                     />
                   </div>
                 </div>
-
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Número de Identidad
+                    {t('auth.identityNumber')}
                   </label>
                   <div className='relative'>
                     <User className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
@@ -261,16 +258,17 @@ export default function LoginPage() {
                       value={registerIdentityNumber}
                       onChange={e => setRegisterIdentityNumber(e.target.value)}
                       className='w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                      placeholder='123456789'
+                      placeholder={t('auth.identityNumberPlaceholder', {
+                        defaultValue: '123456789',
+                      })}
                       required
                       autoComplete='off'
                     />
                   </div>
                 </div>
-
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Hospital
+                    {t('auth.hospital')}
                   </label>
                   <select
                     value={registerHospital}
@@ -289,29 +287,28 @@ export default function LoginPage() {
                     required
                   >
                     <option value='Diani Beach Hospital (Ukunda)'>
-                      Diani Beach Hospital (Ukunda)
+                      {t('hospitals.dianiBeach')}
                     </option>
                     <option value='Palm Beach Hospital (Ukunda)'>
-                      Palm Beach Hospital (Ukunda)
+                      {t('hospitals.palmBeach')}
                     </option>
                     <option value='Diani Health Center (Ukunda)'>
-                      Diani Health Center (Ukunda)
+                      {t('hospitals.dianiHealth')}
                     </option>
                     <option value='Pendo Duruma Medical Centre (Kwale County)'>
-                      Pendo Duruma Medical Centre (Kwale County)
+                      {t('hospitals.pendoDuruma')}
                     </option>
                     <option value='Ukunda Medical Clinic (Ukunda)'>
-                      Ukunda Medical Clinic (Ukunda)
+                      {t('hospitals.ukundaMedical')}
                     </option>
                     <option value='Sunshine Medical Clinic (Kwale County)'>
-                      Sunshine Medical Clinic (Kwale County)
+                      {t('hospitals.sunshineMedical')}
                     </option>
                   </select>
                 </div>
-
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Puesto de Trabajo
+                    {t('auth.jobPosition')}
                   </label>
                   <select
                     value={registerJobPosition}
@@ -323,15 +320,18 @@ export default function LoginPage() {
                     className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
                     required
                   >
-                    <option value='Director'>Director</option>
-                    <option value='Médico'>Médico</option>
-                    <option value='Asistente'>Asistente</option>
+                    <option value='Director'>
+                      {t('jobPositions.director')}
+                    </option>
+                    <option value='Médico'>{t('jobPositions.doctor')}</option>
+                    <option value='Asistente'>
+                      {t('jobPositions.assistant')}
+                    </option>
                   </select>
                 </div>
-
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Contraseña
+                    {t('auth.password')}
                   </label>
                   <div className='relative'>
                     <Lock className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
@@ -340,31 +340,32 @@ export default function LoginPage() {
                       value={registerPassword}
                       onChange={e => setRegisterPassword(e.target.value)}
                       className='w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                      placeholder='••••••••'
+                      placeholder={t('auth.passwordPlaceholder', {
+                        defaultValue: '••••••••',
+                      })}
                       required
                       minLength={6}
                       autoComplete='new-password'
                     />
                   </div>
                 </div>
-
                 <button
                   type='submit'
                   disabled={loading}
                   className='w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
                 >
-                  {loading ? 'Registrando...' : 'Registrarse'}
+                  {loading
+                    ? t('auth.registering', { defaultValue: 'Registrando...' })
+                    : t('auth.register')}
                 </button>
               </form>
             )}
-
             {/* Error/Success Messages */}
             {error && (
               <div className='mt-4 p-3 bg-red-50 border border-red-200 rounded-md'>
                 <p className='text-red-800 text-sm'>{error}</p>
               </div>
             )}
-
             {success && (
               <div className='mt-4 p-3 bg-green-50 border border-green-200 rounded-md'>
                 <p className='text-green-800 text-sm'>{success}</p>
@@ -372,12 +373,9 @@ export default function LoginPage() {
             )}
           </div>
         </div>
-
         {/* Footer */}
         <div className='text-center mt-6'>
-          <p className='text-sm text-gray-600'>
-            Sistema de gestión hospitalaria para profesionales médicos
-          </p>
+          <p className='text-sm text-gray-600'>{t('auth.footer')}</p>
         </div>
       </div>
     </div>

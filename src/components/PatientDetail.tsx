@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, Patient, PatientNote, PatientFile } from '@/lib/supabase';
+import { useI18n } from '@/lib/i18n';
 import {
   X,
   User,
@@ -29,6 +30,7 @@ export default function PatientDetail({
   onClose,
   onPatientUpdated,
 }: PatientDetailProps) {
+  const { t, language } = useI18n();
   const { appUser } = useAuth();
   const [notes, setNotes] = useState<PatientNote[]>([]);
   const [files, setFiles] = useState<PatientFile[]>([]);
@@ -195,6 +197,21 @@ export default function PatientDetail({
     }
   };
 
+  // Función para formatear la fecha según el idioma
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(
+      language === 'es' ? 'es-ES' : language === 'sw' ? 'sw-TZ' : 'en-US',
+      {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }
+    );
+  };
+
   return (
     <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50'>
       <div className='bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto'>
@@ -206,7 +223,7 @@ export default function PatientDetail({
             </div>
             <div>
               <h2 className='text-lg font-semibold text-gray-900'>
-                Ficha del Paciente
+                {t('dashboard.patientRecord')}
               </h2>
               <p className='text-sm text-gray-500'>
                 {patient.full_name} - ID: {patient.identity_number}
@@ -226,7 +243,9 @@ export default function PatientDetail({
           <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
             <div className='flex items-center space-x-2'>
               <User className='h-4 w-4 text-gray-400' />
-              <span className='text-sm text-gray-600'>Nombre:</span>
+              <span className='text-sm text-gray-600'>
+                {t('patients.name')}:
+              </span>
               <span className='text-sm font-medium'>{patient.full_name}</span>
             </div>
             <div className='flex items-center space-x-2'>
@@ -238,11 +257,17 @@ export default function PatientDetail({
             </div>
             <div className='flex items-center space-x-2'>
               <Calendar className='h-4 w-4 text-gray-400' />
-              <span className='text-sm text-gray-600'>Edad:</span>
-              <span className='text-sm font-medium'>{patient.age} años</span>
+              <span className='text-sm text-gray-600'>
+                {t('patients.age')}:
+              </span>
+              <span className='text-sm font-medium'>
+                {t('patients.years', { count: patient.age })}
+              </span>
             </div>
             <div className='flex items-center space-x-2'>
-              <span className='text-sm text-gray-600'>Sexo:</span>
+              <span className='text-sm text-gray-600'>
+                {t('patients.sex')}:
+              </span>
               <span
                 className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                   patient.sex === 'male'
@@ -253,10 +278,10 @@ export default function PatientDetail({
                 }`}
               >
                 {patient.sex === 'male'
-                  ? 'Masculino'
+                  ? t('patients.male')
                   : patient.sex === 'female'
-                  ? 'Femenino'
-                  : 'Otro'}
+                  ? t('patients.female')
+                  : t('patients.other')}
               </span>
             </div>
           </div>
@@ -265,40 +290,40 @@ export default function PatientDetail({
         {/* Content Tabs */}
         <div className='flex border-b'>
           <button className='flex-1 py-3 px-4 text-sm font-medium text-blue-600 border-b-2 border-blue-600'>
-            Notas Médicas ({notes.length})
+            {t('notes.title')} ({notes.length})
           </button>
           <button className='flex-1 py-3 px-4 text-sm font-medium text-gray-500 hover:text-gray-700'>
-            Archivos ({files.length})
+            {t('files.title')} ({files.length})
           </button>
         </div>
 
         {/* Notes Section */}
         <div className='p-6'>
           <div className='flex items-center justify-between mb-6'>
-            <h3 className='text-lg font-medium text-gray-900'>Notas Médicas</h3>
+            <h3 className='text-lg font-medium text-gray-900'>
+              {t('notes.title')}
+            </h3>
             <button
               onClick={() => setShowNoteModal(true)}
               className='flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
             >
               <Plus className='h-4 w-4' />
-              <span>Agregar Nota</span>
+              <span>{t('notes.addNote')}</span>
             </button>
           </div>
 
           {loading ? (
             <div className='text-center py-8'>
               <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto'></div>
-              <p className='mt-4 text-gray-600'>Cargando notas...</p>
+              <p className='mt-4 text-gray-600'>{t('notes.loading')}</p>
             </div>
           ) : notes.length === 0 ? (
             <div className='text-center py-8'>
               <FileText className='h-12 w-12 text-gray-400 mx-auto mb-4' />
               <h4 className='text-lg font-medium text-gray-900 mb-2'>
-                No hay notas médicas
+                {t('notes.noNotes')}
               </h4>
-              <p className='text-gray-600'>
-                Agrega la primera nota médica para este paciente
-              </p>
+              <p className='text-gray-600'>{t('notes.addFirstNote')}</p>
             </div>
           ) : (
             <div className='space-y-4'>
@@ -318,13 +343,7 @@ export default function PatientDetail({
                     </div>
                     <div className='flex items-center space-x-2'>
                       <span className='text-sm text-gray-500'>
-                        {new Date(note.created_at).toLocaleDateString('es-ES', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
+                        {formatDate(note.created_at)}
                       </span>
                       <button
                         onClick={() => handleEditNote(note)}
@@ -344,7 +363,7 @@ export default function PatientDetail({
                   {note.diagnosis && (
                     <div className='mb-3'>
                       <h5 className='text-sm font-medium text-gray-700 mb-1'>
-                        Diagnóstico:
+                        {t('notes.diagnosis')}:
                       </h5>
                       <p className='text-sm text-gray-900 bg-gray-50 p-3 rounded-md'>
                         {note.diagnosis}
@@ -355,7 +374,7 @@ export default function PatientDetail({
                   {note.treatment && (
                     <div className='mb-3'>
                       <h5 className='text-sm font-medium text-gray-700 mb-1'>
-                        Tratamiento:
+                        {t('notes.treatment')}:
                       </h5>
                       <p className='text-sm text-gray-900 bg-gray-50 p-3 rounded-md'>
                         {note.treatment}
@@ -366,7 +385,7 @@ export default function PatientDetail({
                   {note.observations && (
                     <div>
                       <h5 className='text-sm font-medium text-gray-700 mb-1'>
-                        Observaciones:
+                        {t('notes.observations')}:
                       </h5>
                       <p className='text-sm text-gray-900 bg-gray-50 p-3 rounded-md'>
                         {note.observations}
@@ -383,14 +402,14 @@ export default function PatientDetail({
         <div className='p-6 border-t'>
           <div className='flex items-center justify-between mb-6'>
             <h3 className='text-lg font-medium text-gray-900'>
-              Archivos Adjuntos
+              {t('files.title')}
             </h3>
             <button
               onClick={() => setShowFileModal(true)}
               className='flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors'
             >
               <Paperclip className='h-4 w-4' />
-              <span>Subir Archivo</span>
+              <span>{t('files.uploadFile')}</span>
             </button>
           </div>
 
@@ -398,11 +417,9 @@ export default function PatientDetail({
             <div className='text-center py-8'>
               <Paperclip className='h-12 w-12 text-gray-400 mx-auto mb-4' />
               <h4 className='text-lg font-medium text-gray-900 mb-2'>
-                No hay archivos adjuntos
+                {t('files.noFiles')}
               </h4>
-              <p className='text-gray-600'>
-                Sube documentos, imágenes o archivos relacionados
-              </p>
+              <p className='text-gray-600'>{t('files.addFirstFile')}</p>
             </div>
           ) : (
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
@@ -426,17 +443,17 @@ export default function PatientDetail({
                     </button>
                   </div>
                   <div className='flex items-center justify-between text-xs text-gray-500 mb-3'>
-                    <span>Subido por: {file.users?.full_name}</span>
                     <span>
-                      {new Date(file.uploaded_at).toLocaleDateString('es-ES')}
+                      {t('files.uploadedBy')}: {file.users?.full_name}
                     </span>
+                    <span>{formatDate(file.uploaded_at)}</span>
                   </div>
                   <button
                     onClick={() => handleDownloadFile(file)}
                     className='w-full flex items-center justify-center space-x-2 px-3 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors'
                   >
                     <Download className='h-4 w-4' />
-                    <span>Descargar</span>
+                    <span>{t('files.download')}</span>
                   </button>
                 </div>
               ))}

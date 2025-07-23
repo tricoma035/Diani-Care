@@ -1,3 +1,4 @@
+'use client';
 // Sistema de internacionalización nativo para Next.js 15
 import {
   createContext,
@@ -35,6 +36,9 @@ const translations = {
       yes: 'Sí',
       no: 'No',
       actions: 'Acciones',
+      saveChanges: 'Guardar Cambios',
+      saving: 'Guardando...',
+      creating: 'Creando...',
     },
     auth: {
       login: 'Iniciar Sesión',
@@ -56,6 +60,13 @@ const translations = {
       emailNotConfirmed: 'Por favor, verifica tu email antes de iniciar sesión',
       tooManyRequests: 'Demasiados intentos. Intenta de nuevo en unos minutos',
       userAlreadyExists: 'Este email ya está registrado',
+      emailPlaceholder: 'usuario@hospital.com',
+      fullNamePlaceholder: 'Nombre completo del paciente',
+      identityNumberPlaceholder: 'Número de identidad o cédula',
+      passwordPlaceholder: '••••••••',
+      title: 'Sistema Hospitalario',
+      subtitle: 'Gestión de pacientes y profesionales médicos',
+      footer: 'Sistema de gestión hospitalaria para profesionales médicos',
     },
     hospitals: {
       dianiBeach: 'Diani Beach Hospital (Ukunda)',
@@ -73,6 +84,7 @@ const translations = {
     patients: {
       title: 'Pacientes',
       addPatient: 'Añadir Paciente',
+      addPatientSubtitle: 'Registra un nuevo paciente',
       editPatient: 'Editar Paciente',
       deletePatient: 'Eliminar Paciente',
       patientDetails: 'Detalles del Paciente',
@@ -94,41 +106,68 @@ const translations = {
       patientDeleted: 'Paciente eliminado exitosamente',
       confirmDelete: '¿Estás seguro de que quieres eliminar este paciente?',
       deleteWarning: 'Esta acción no se puede deshacer.',
+      years: '{{count}} años',
+      total: 'Total de pacientes: ',
+      addFirstPatient: 'Comienza agregando el primer paciente al sistema',
+      tableHeaders: {
+        patient: 'Paciente',
+        info: 'Información',
+        createdAt: 'Fecha de Registro',
+        actions: 'Acciones',
+      },
+      viewDetails: 'Ver detalles',
     },
     notes: {
       title: 'Notas Médicas',
       addNote: 'Añadir Nota',
+      addNoteSubtitle: 'Registra una nueva nota médica',
       editNote: 'Editar Nota',
+      editNoteSubtitle: 'Modifica la información de la nota',
       deleteNote: 'Eliminar Nota',
       diagnosis: 'Diagnóstico',
+      diagnosisPlaceholder: 'Describe el diagnóstico del paciente...',
       treatment: 'Tratamiento',
+      treatmentPlaceholder: 'Describe el tratamiento prescrito...',
       observations: 'Observaciones',
+      observationsPlaceholder: 'Agrega observaciones adicionales...',
       createdAt: 'Fecha de Creación',
       createdBy: 'Creado por',
       noNotes: 'No hay notas médicas',
       noteCreated: 'Nota creada exitosamente',
       noteUpdated: 'Nota actualizada exitosamente',
       noteDeleted: 'Nota eliminada exitosamente',
+      loading: 'Cargando notas...',
+      addFirstNote: 'Agrega la primera nota médica para este paciente',
+      infoTitle: 'Información de la Nota',
+      infoDescription:
+        'Esta nota será registrada con tu información profesional y fecha actual. Los campos de diagnóstico y tratamiento son obligatorios para mantener un registro médico completo.',
     },
     files: {
-      title: 'Archivos',
+      title: 'Archivos Adjuntos',
       uploadFile: 'Subir Archivo',
       downloadFile: 'Descargar Archivo',
       deleteFile: 'Eliminar Archivo',
       fileName: 'Nombre del Archivo',
-      fileSize: 'Tamaño del Archivo',
+      fileSize: 'Tamaño: {{size}} MB',
       uploadDate: 'Fecha de Subida',
       uploadedBy: 'Subido por',
-      noFiles: 'No hay archivos',
+      noFiles: 'No hay archivos adjuntos',
       selectFile: 'Seleccionar archivo',
       uploading: 'Subiendo...',
       uploadSuccess: 'Archivo subido exitosamente',
       uploadError: 'Error al subir archivo',
-      fileTypes: 'Tipos de archivo permitidos: PDF, JPG, PNG, DOC, DOCX',
-      maxSize: 'Tamaño máximo: 10MB',
+      fileTypes: 'Tipos de archivo permitidos:',
+      fileTypesImages: '• Imágenes: JPG, PNG, GIF',
+      fileTypesDocs: '• Documentos: PDF, DOC, DOCX',
+      fileTypesText: '• Texto: TXT',
+      maxSize: '• Tamaño máximo: 10MB',
+      addFirstFile: 'Sube documentos, imágenes o archivos relacionados',
+      download: 'Descargar',
     },
     dashboard: {
       title: 'Panel de Control',
+      subtitle: 'Gestión de pacientes y profesionales médicos',
+      patientRecord: 'Ficha del Paciente',
       welcome: 'Bienvenido',
       totalPatients: 'Total de Pacientes',
       recentPatients: 'Pacientes Recientes',
@@ -166,6 +205,31 @@ const translations = {
       maxLength: 'Máximo {{max}} caracteres',
       passwordMatch: 'Las contraseñas no coinciden',
     },
+    chatbot: {
+      database: 'Base de datos',
+      internet: 'Internet',
+      welcome:
+        '¡Hola! Elige el tipo de consulta y pregúntame lo que quieras sobre la base de datos o internet.',
+      inputPlaceholder: 'Escribe tu pregunta...',
+      send: 'Enviar',
+      conversations: 'Conversaciones',
+      newConversationTitle: 'Nueva conversación - {{date}}',
+      dbNotImplemented:
+        'La búsqueda en la base de datos estará disponible próximamente.',
+      dbNeedPatientRef:
+        'Por favor, indica el nombre o ID del paciente para buscar archivos o información.',
+      dbNoPatient: 'No se encontró ningún paciente con esa referencia.',
+      dbPatientFound: 'Paciente encontrado: {{name}}',
+      dbNoFiles: 'No hay archivos asociados a este paciente.',
+      dbFileContent: 'Contenido del archivo',
+      dbFileTypeNotSupported:
+        'La lectura automática solo está disponible para archivos TXT por ahora.',
+      dbDiagnosis: 'Diagnóstico/Resumen generado',
+      noBrowsing:
+        'La búsqueda en internet no está disponible en este entorno. El modelo solo puede responder con información hasta 2023.',
+      dbMultiplePatients:
+        'Se han encontrado {{count}} pacientes. Por favor, especifica el nombre completo o el número de identificación:\n',
+    },
   },
   en: {
     common: {
@@ -184,6 +248,9 @@ const translations = {
       yes: 'Yes',
       no: 'No',
       actions: 'Actions',
+      saveChanges: 'Save Changes',
+      saving: 'Saving...',
+      creating: 'Creating...',
     },
     auth: {
       login: 'Login',
@@ -205,6 +272,13 @@ const translations = {
       emailNotConfirmed: 'Please verify your email before logging in',
       tooManyRequests: 'Too many attempts. Try again in a few minutes',
       userAlreadyExists: 'This email is already registered',
+      emailPlaceholder: 'user@hospital.com',
+      fullNamePlaceholder: 'Patient full name',
+      identityNumberPlaceholder: 'Identity or document number',
+      passwordPlaceholder: '••••••••',
+      title: 'Hospital System',
+      subtitle: 'Patient and medical professional management',
+      footer: 'Hospital management system for medical professionals',
     },
     hospitals: {
       dianiBeach: 'Diani Beach Hospital (Ukunda)',
@@ -222,6 +296,7 @@ const translations = {
     patients: {
       title: 'Patients',
       addPatient: 'Add Patient',
+      addPatientSubtitle: 'Register a new patient',
       editPatient: 'Edit Patient',
       deletePatient: 'Delete Patient',
       patientDetails: 'Patient Details',
@@ -243,41 +318,68 @@ const translations = {
       patientDeleted: 'Patient deleted successfully',
       confirmDelete: 'Are you sure you want to delete this patient?',
       deleteWarning: 'This action cannot be undone.',
+      years: '{{count}} years',
+      total: 'Total patients: ',
+      addFirstPatient: 'Start by adding the first patient to the system',
+      tableHeaders: {
+        patient: 'Patient',
+        info: 'Information',
+        createdAt: 'Registration Date',
+        actions: 'Actions',
+      },
+      viewDetails: 'View details',
     },
     notes: {
       title: 'Medical Notes',
       addNote: 'Add Note',
+      addNoteSubtitle: 'Register a new medical note',
       editNote: 'Edit Note',
+      editNoteSubtitle: 'Edit the note information',
       deleteNote: 'Delete Note',
       diagnosis: 'Diagnosis',
+      diagnosisPlaceholder: 'Describe the patient diagnosis...',
       treatment: 'Treatment',
+      treatmentPlaceholder: 'Describe the prescribed treatment...',
       observations: 'Observations',
+      observationsPlaceholder: 'Add additional observations...',
       createdAt: 'Created At',
       createdBy: 'Created By',
       noNotes: 'No medical notes',
       noteCreated: 'Note created successfully',
       noteUpdated: 'Note updated successfully',
       noteDeleted: 'Note deleted successfully',
+      loading: 'Loading notes...',
+      addFirstNote: 'Add the first medical note for this patient',
+      infoTitle: 'Note Information',
+      infoDescription:
+        'This note will be registered with your professional information and the current date. Diagnosis and treatment fields are required to keep a complete medical record.',
     },
     files: {
-      title: 'Files',
+      title: 'Attached Files',
       uploadFile: 'Upload File',
       downloadFile: 'Download File',
       deleteFile: 'Delete File',
       fileName: 'File Name',
-      fileSize: 'File Size',
+      fileSize: 'Size: {{size}} MB',
       uploadDate: 'Upload Date',
       uploadedBy: 'Uploaded By',
-      noFiles: 'No files',
+      noFiles: 'No attached files',
       selectFile: 'Select file',
       uploading: 'Uploading...',
       uploadSuccess: 'File uploaded successfully',
       uploadError: 'Error uploading file',
-      fileTypes: 'Allowed file types: PDF, JPG, PNG, DOC, DOCX',
-      maxSize: 'Maximum size: 10MB',
+      fileTypes: 'Allowed file types:',
+      fileTypesImages: '• Images: JPG, PNG, GIF',
+      fileTypesDocs: '• Documents: PDF, DOC, DOCX',
+      fileTypesText: '• Text: TXT',
+      maxSize: '• Maximum size: 10MB',
+      addFirstFile: 'Upload documents, images or related files',
+      download: 'Download',
     },
     dashboard: {
       title: 'Dashboard',
+      subtitle: 'Patient and medical professional management',
+      patientRecord: 'Patient Record',
       welcome: 'Welcome',
       totalPatients: 'Total Patients',
       recentPatients: 'Recent Patients',
@@ -315,6 +417,30 @@ const translations = {
       maxLength: 'Maximum {{max}} characters',
       passwordMatch: 'Passwords do not match',
     },
+    chatbot: {
+      database: 'Database',
+      internet: 'Internet',
+      welcome:
+        'Hi! Choose the query type and ask me anything about the database or the internet.',
+      inputPlaceholder: 'Type your question...',
+      send: 'Send',
+      conversations: 'Conversations',
+      newConversationTitle: 'New conversation - {{date}}',
+      dbNotImplemented: 'Database search will be available soon.',
+      dbNeedPatientRef:
+        'Please specify the patient name or ID to search for files or information.',
+      dbNoPatient: 'No patient found with that reference.',
+      dbPatientFound: 'Patient found: {{name}}',
+      dbNoFiles: 'No files associated with this patient.',
+      dbFileContent: 'File content',
+      dbFileTypeNotSupported:
+        'Automatic reading is only available for TXT files for now.',
+      dbDiagnosis: 'Diagnosis/Summary generated',
+      noBrowsing:
+        'La búsqueda en internet no está disponible en este entorno. El modelo solo puede responder con información hasta 2023.',
+      dbMultiplePatients:
+        '{{count}} patients found. Please specify the full name or identity number:\n',
+    },
   },
   sw: {
     common: {
@@ -333,6 +459,9 @@ const translations = {
       yes: 'Ndiyo',
       no: 'Hapana',
       actions: 'Vitendo',
+      saveChanges: 'Hifadhi Mabadiliko',
+      saving: 'Inahifadhi...',
+      creating: 'Inaunda...',
     },
     auth: {
       login: 'Ingia',
@@ -357,6 +486,13 @@ const translations = {
       tooManyRequests:
         'Majaribio mengi sana. Jaribu tena baada ya dakika chache',
       userAlreadyExists: 'Barua pepe hii tayari imesajiliwa',
+      emailPlaceholder: 'mtumiaji@hospitali.com',
+      fullNamePlaceholder: 'Jina Kamili',
+      identityNumberPlaceholder: 'Nambari ya kitambulisho au hati',
+      passwordPlaceholder: '••••••••',
+      title: 'Mfumo wa Hospitali',
+      subtitle: 'Usimamizi wa wagonjwa na wataalamu wa afya',
+      footer: 'Mfumo wa usimamizi wa hospitali kwa wataalamu wa afya',
     },
     hospitals: {
       dianiBeach: 'Hospitali ya Diani Beach (Ukunda)',
@@ -374,6 +510,7 @@ const translations = {
     patients: {
       title: 'Wagonjwa',
       addPatient: 'Ongeza Mgonjwa',
+      addPatientSubtitle: 'Sajili mgonjwa mpya',
       editPatient: 'Hariri Mgonjwa',
       deletePatient: 'Futa Mgonjwa',
       patientDetails: 'Maelezo ya Mgonjwa',
@@ -395,41 +532,68 @@ const translations = {
       patientDeleted: 'Mgongwa alifutwa kwa mafanikio',
       confirmDelete: 'Una uhakika unataka kufuta mgonjwa huyu?',
       deleteWarning: 'Kitendo hiki hakiwezi kurekebishwa.',
+      years: '{{count}} miaka',
+      total: 'Jumla ya wagonjwa: ',
+      addFirstPatient: 'Anza kwa kuongeza mgonjwa wa kwanza kwenye mfumo',
+      tableHeaders: {
+        patient: 'Mgonjwa',
+        info: 'Taarifa',
+        createdAt: 'Tarehe ya Usajili',
+        actions: 'Vitendo',
+      },
+      viewDetails: 'Tazama maelezo',
     },
     notes: {
       title: 'Maelezo ya Matibabu',
       addNote: 'Ongeza Maelezo',
+      addNoteSubtitle: 'Sajili maelezo mapya ya matibabu',
       editNote: 'Hariri Maelezo',
+      editNoteSubtitle: 'Hariri taarifa za maelezo',
       deleteNote: 'Futa Maelezo',
       diagnosis: 'Uchunguzi',
+      diagnosisPlaceholder: 'Eleza uchunguzi wa mgonjwa...',
       treatment: 'Matibabu',
+      treatmentPlaceholder: 'Eleza matibabu yaliyopendekezwa...',
       observations: 'Uchunguzi',
+      observationsPlaceholder: 'Ongeza uchunguzi wa ziada...',
       createdAt: 'Iliundwa',
       createdBy: 'Iliundwa na',
       noNotes: 'Hakuna maelezo ya matibabu',
       noteCreated: 'Maelezo yaliundwa kwa mafanikio',
       noteUpdated: 'Maelezo yalisasishwa kwa mafanikio',
       noteDeleted: 'Maelezo yalifutwa kwa mafanikio',
+      loading: 'Inapakia maelezo...',
+      addFirstNote: 'Ongeza maelezo ya kwanza ya matibabu kwa mgonjwa huyu',
+      infoTitle: 'Taarifa za Maelezo',
+      infoDescription:
+        'Maelezo haya yatasajiliwa na taarifa zako za kitaaluma na tarehe ya sasa. Sehemu za uchunguzi na matibabu ni lazima ili kuweka rekodi kamili ya matibabu.',
     },
     files: {
-      title: 'Faili',
+      title: 'Faili Zilizounganishwa',
       uploadFile: 'Pakia Faili',
       downloadFile: 'Pakua Faili',
       deleteFile: 'Futa Faili',
       fileName: 'Jina la Faili',
-      fileSize: 'Ukubwa wa Faili',
+      fileSize: 'Ukubwa: {{size}} MB',
       uploadDate: 'Tarehe ya Kupakia',
       uploadedBy: 'Iliwekwa na',
-      noFiles: 'Hakuna faili',
+      noFiles: 'Hakuna faili zilizounganishwa',
       selectFile: 'Chagua faili',
       uploading: 'Inapakia...',
       uploadSuccess: 'Faili ilipakwa kwa mafanikio',
       uploadError: 'Hitilafu katika kupakia faili',
-      fileTypes: 'Aina za faili zinazoruhusiwa: PDF, JPG, PNG, DOC, DOCX',
-      maxSize: 'Ukubwa wa juu: 10MB',
+      fileTypes: 'Aina za faili zinazoruhusiwa:',
+      fileTypesImages: '• Picha: JPG, PNG, GIF',
+      fileTypesDocs: '• Nyaraka: PDF, DOC, DOCX',
+      fileTypesText: '• Maandishi: TXT',
+      maxSize: '• Ukubwa wa juu: 10MB',
+      addFirstFile: 'Pakia nyaraka, picha au faili zinazohusiana',
+      download: 'Pakua',
     },
     dashboard: {
       title: 'Dashibodi',
+      subtitle: 'Usimamizi wa wagonjwa na wataalamu wa afya',
+      patientRecord: 'Fomu ya Mgonjwa',
       welcome: 'Karibu',
       totalPatients: 'Jumla ya Wagonjwa',
       recentPatients: 'Wagonjwa wa Hivi Karibuni',
@@ -467,6 +631,31 @@ const translations = {
       maxLength: 'Herufi {{max}} za juu',
       passwordMatch: 'Nywila hazifanani',
     },
+    chatbot: {
+      database: 'Hifadhidata',
+      internet: 'Intaneti',
+      welcome:
+        'Habari! Chagua aina ya utafutaji na niulize chochote kuhusu hifadhidata au intaneti.',
+      inputPlaceholder: 'Andika swali lako...',
+      send: 'Tuma',
+      conversations: 'Mazungumzo',
+      newConversationTitle: 'Mazungumzo mapya - {{date}}',
+      dbNotImplemented:
+        'Utafutaji kwenye hifadhidata utapatikana hivi karibuni.',
+      dbNeedPatientRef:
+        'Tafadhali taja jina au nambari ya mgonjwa ili kutafuta faili au taarifa.',
+      dbNoPatient: 'Hakuna mgonjwa aliyepatikana kwa marejeleo hayo.',
+      dbPatientFound: 'Mgonjwa amepatikana: {{name}}',
+      dbNoFiles: 'Hakuna faili zilizounganishwa na mgonjwa huyu.',
+      dbFileContent: 'Yaliyomo kwenye faili',
+      dbFileTypeNotSupported:
+        'Usomaji wa moja kwa moja unapatikana tu kwa faili za TXT kwa sasa.',
+      dbDiagnosis: 'Uchunguzi/Muhtasari uliotolewa',
+      noBrowsing:
+        'La búsqueda en internet no está disponible en este entorno. El modelo solo puede responder con información hasta 2023.',
+      dbMultiplePatients:
+        'Wagonjwa {{count}} wamepatikana. Tafadhali taja jina kamili au nambari ya kitambulisho:\n',
+    },
   },
 };
 
@@ -495,14 +684,17 @@ const getTranslation = (
     if (value && typeof value === 'object' && k in value) {
       value = value[k];
     } else {
-      // Fallback a inglés si no se encuentra la traducción
-      value = getTranslation(key, 'en', params);
-      break;
+      // Solo hacer fallback si no estamos ya en inglés
+      if (language !== 'en') {
+        return getTranslation(key, 'en', params);
+      } else {
+        return key; // Devolver la clave si no se encuentra en inglés
+      }
     }
   }
 
   if (typeof value !== 'string') {
-    return key; // Devolver la clave si no se encuentra la traducción
+    return key;
   }
 
   // Interpolación de parámetros

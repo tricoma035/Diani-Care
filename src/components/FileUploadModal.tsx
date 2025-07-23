@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { X, Upload, File, AlertCircle } from 'lucide-react';
+import { useI18n } from '@/lib/i18n';
 
 interface FileUploadModalProps {
   patientId: string;
@@ -17,6 +18,7 @@ export default function FileUploadModal({
   onFileUploaded,
 }: FileUploadModalProps) {
   const { appUser } = useAuth();
+  const { t } = useI18n();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState('');
@@ -137,10 +139,10 @@ export default function FileUploadModal({
             </div>
             <div>
               <h2 className='text-lg font-semibold text-gray-900'>
-                Subir Archivo
+                {t('files.uploadFile')}
               </h2>
               <p className='text-sm text-gray-500'>
-                Adjunta documentos o imágenes al paciente
+                {t('files.uploadFileSubtitle')}
               </p>
             </div>
           </div>
@@ -179,20 +181,22 @@ export default function FileUploadModal({
                 <File className='h-12 w-12 text-green-600 mx-auto' />
                 <div>
                   <h3 className='text-lg font-medium text-gray-900 mb-2'>
-                    Archivo seleccionado
+                    {t('files.selectedFile')}
                   </h3>
                   <p className='text-sm text-gray-600 mb-4'>
                     {selectedFile.name}
                   </p>
                   <p className='text-xs text-gray-500'>
-                    Tamaño: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                    {t('files.fileSize', {
+                      size: (selectedFile.size / 1024 / 1024).toFixed(2),
+                    })}
                   </p>
                 </div>
                 <button
                   onClick={() => setSelectedFile(null)}
                   className='text-sm text-red-600 hover:text-red-700'
                 >
-                  Seleccionar otro archivo
+                  {t('files.selectAnotherFile')}
                 </button>
               </div>
             ) : (
@@ -200,10 +204,10 @@ export default function FileUploadModal({
                 <Upload className='h-12 w-12 text-gray-400 mx-auto' />
                 <div>
                   <h3 className='text-lg font-medium text-gray-900 mb-2'>
-                    Arrastra y suelta tu archivo aquí
+                    {t('files.dragAndDrop')}
                   </h3>
                   <p className='text-sm text-gray-600 mb-4'>
-                    o haz clic para seleccionar un archivo
+                    {t('files.orClickToSelect')}
                   </p>
                 </div>
                 <label className='cursor-pointer'>
@@ -214,7 +218,7 @@ export default function FileUploadModal({
                     accept='.jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt'
                   />
                   <span className='inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'>
-                    Seleccionar Archivo
+                    {t('files.selectFile')}
                   </span>
                 </label>
               </div>
@@ -225,7 +229,7 @@ export default function FileUploadModal({
           {isUploading && (
             <div className='mt-6'>
               <div className='flex items-center justify-between text-sm text-gray-600 mb-2'>
-                <span>Subiendo archivo...</span>
+                <span>{t('files.uploading')}</span>
                 <span>{uploadProgress}%</span>
               </div>
               <div className='w-full bg-gray-200 rounded-full h-2'>
@@ -240,13 +244,13 @@ export default function FileUploadModal({
           {/* File Types Info */}
           <div className='mt-6 bg-gray-50 rounded-lg p-4'>
             <h4 className='text-sm font-medium text-gray-900 mb-2'>
-              Tipos de archivo permitidos:
+              {t('files.fileTypes')}
             </h4>
             <ul className='text-xs text-gray-600 space-y-1'>
-              <li>• Imágenes: JPG, PNG, GIF</li>
-              <li>• Documentos: PDF, DOC, DOCX</li>
-              <li>• Texto: TXT</li>
-              <li>• Tamaño máximo: 10MB</li>
+              <li>{t('files.fileTypesImages')}</li>
+              <li>{t('files.fileTypesDocs')}</li>
+              <li>{t('files.fileTypesText')}</li>
+              <li>{t('files.maxSize')}</li>
             </ul>
           </div>
         </div>
@@ -258,14 +262,14 @@ export default function FileUploadModal({
             disabled={isUploading}
             className='px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50'
           >
-            Cancelar
+            {t('common.cancel')}
           </button>
           <button
             onClick={handleUpload}
             disabled={!selectedFile || isUploading}
             className='px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
           >
-            {isUploading ? 'Subiendo...' : 'Subir Archivo'}
+            {isUploading ? t('files.uploading') : t('files.uploadFile')}
           </button>
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import { Patient } from '@/lib/supabase';
 import { Edit, Trash2, Eye, User, Calendar } from 'lucide-react';
+import { useI18n } from '@/lib/i18n';
 
 interface PatientListProps {
   patients: Patient[];
@@ -18,12 +19,14 @@ export default function PatientList({
   onDelete,
   onView,
 }: PatientListProps) {
+  const { t, language } = useI18n();
+
   if (loading) {
     return (
       <div className='bg-white rounded-lg shadow'>
         <div className='p-8 text-center'>
           <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto'></div>
-          <p className='mt-4 text-gray-600'>Cargando pacientes...</p>
+          <p className='mt-4 text-gray-600'>{t('patients.loading')}</p>
         </div>
       </div>
     );
@@ -35,15 +38,26 @@ export default function PatientList({
         <div className='p-8 text-center'>
           <User className='h-12 w-12 text-gray-400 mx-auto mb-4' />
           <h3 className='text-lg font-medium text-gray-900 mb-2'>
-            No hay pacientes registrados
+            {t('patients.noPatients')}
           </h3>
-          <p className='text-gray-600'>
-            Comienza agregando el primer paciente al sistema
-          </p>
+          <p className='text-gray-600'>{t('patients.addFirstPatient')}</p>
         </div>
       </div>
     );
   }
+
+  // Función para formatear la fecha según el idioma
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(
+      language === 'es' ? 'es-ES' : language === 'sw' ? 'sw-TZ' : 'en-US',
+      {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }
+    );
+  };
 
   return (
     <div className='bg-white rounded-lg shadow overflow-hidden'>
@@ -52,16 +66,16 @@ export default function PatientList({
           <thead className='bg-gray-50'>
             <tr>
               <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                Paciente
+                {t('patients.tableHeaders.patient')}
               </th>
               <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                Información
+                {t('patients.tableHeaders.info')}
               </th>
               <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                Fecha de Registro
+                {t('patients.tableHeaders.createdAt')}
               </th>
               <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                Acciones
+                {t('patients.tableHeaders.actions')}
               </th>
             </tr>
           </thead>
@@ -92,7 +106,7 @@ export default function PatientList({
                   <div className='text-sm text-gray-900'>
                     <div className='flex items-center space-x-2'>
                       <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800'>
-                        {patient.age} años
+                        {t('patients.years', { count: patient.age })}
                       </span>
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -104,10 +118,10 @@ export default function PatientList({
                         }`}
                       >
                         {patient.sex === 'male'
-                          ? 'Masculino'
+                          ? t('patients.male')
                           : patient.sex === 'female'
-                          ? 'Femenino'
-                          : 'Otro'}
+                          ? t('patients.female')
+                          : t('patients.other')}
                       </span>
                     </div>
                   </div>
@@ -115,11 +129,7 @@ export default function PatientList({
                 <td className='px-6 py-4 whitespace-nowrap'>
                   <div className='flex items-center text-sm text-gray-500'>
                     <Calendar className='h-4 w-4 mr-2' />
-                    {new Date(patient.created_at).toLocaleDateString('es-ES', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                    })}
+                    {formatDate(patient.created_at)}
                   </div>
                 </td>
                 <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
@@ -127,21 +137,21 @@ export default function PatientList({
                     <button
                       onClick={() => onView(patient)}
                       className='text-blue-600 hover:text-blue-900 p-1 rounded-md hover:bg-blue-50 transition-colors'
-                      title='Ver detalles'
+                      title={t('patients.viewDetails')}
                     >
                       <Eye className='h-4 w-4' />
                     </button>
                     <button
                       onClick={() => onEdit(patient)}
                       className='text-green-600 hover:text-green-900 p-1 rounded-md hover:bg-green-50 transition-colors'
-                      title='Editar paciente'
+                      title={t('patients.editPatient')}
                     >
                       <Edit className='h-4 w-4' />
                     </button>
                     <button
                       onClick={() => onDelete(patient.id)}
                       className='text-red-600 hover:text-red-900 p-1 rounded-md hover:bg-red-50 transition-colors'
-                      title='Eliminar paciente'
+                      title={t('patients.deletePatient')}
                     >
                       <Trash2 className='h-4 w-4' />
                     </button>
@@ -157,17 +167,23 @@ export default function PatientList({
       <div className='bg-gray-50 px-6 py-3 border-t border-gray-200'>
         <div className='flex items-center justify-between text-sm text-gray-600'>
           <span>
-            Total de pacientes:{' '}
+            {t('patients.total', { count: patients.length })}
             <span className='font-medium'>{patients.length}</span>
           </span>
           <div className='flex items-center space-x-4'>
             <span className='flex items-center'>
               <User className='h-4 w-4 mr-1' />
-              {patients.filter(p => p.sex === 'male').length} masculinos
+              {patients.filter(p => p.sex === 'male').length}{' '}
+              {t('patients.male', {
+                count: patients.filter(p => p.sex === 'male').length,
+              })}
             </span>
             <span className='flex items-center'>
               <User className='h-4 w-4 mr-1' />
-              {patients.filter(p => p.sex === 'female').length} femeninos
+              {patients.filter(p => p.sex === 'female').length}{' '}
+              {t('patients.female', {
+                count: patients.filter(p => p.sex === 'female').length,
+              })}
             </span>
           </div>
         </div>
