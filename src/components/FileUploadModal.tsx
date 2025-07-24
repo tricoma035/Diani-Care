@@ -121,9 +121,13 @@ export default function FileUploadModal({
         const processResult = await processResponse.json();
 
         if (processResult.success) {
+          // Archivo procesado correctamente
         } else {
+          // Error en el procesamiento del archivo
         }
-      } catch (error) {}
+      } catch {
+        // Error al procesar el archivo
+      }
 
       setUploadProgress(100);
 
@@ -134,7 +138,7 @@ export default function FileUploadModal({
 
       // Refrescar sesión tras mutación para evitar problemas de carga infinita
       await refreshSession();
-    } catch (error) {
+    } catch {
       setError('Error al subir el archivo. Por favor, intenta de nuevo.');
     } finally {
       setIsUploading(false);

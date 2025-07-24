@@ -87,10 +87,6 @@ const config: Config = {
       addUtilities(newUtilities);
     },
   ],
-  // Configuración para optimizar el CSS en producción
-  future: {
-    hoverOnlyWhenSupported: true,
-  },
 };
 
 export default config;

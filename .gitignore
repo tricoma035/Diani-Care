@@ -37,6 +37,8 @@ Thumbs.db
 # Logs
 logs
 *.log
+_logs/
+@/_logs/
 
 # Runtime data
 pids
@@ -56,6 +58,7 @@ jspm_packages/
 # Optional npm cache directory
 .npm
 .npm-cache
+@/.npm-cache/
 
 # Optional eslint cache
 .eslintcache

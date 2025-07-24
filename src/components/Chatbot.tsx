@@ -71,8 +71,8 @@ export default function Chatbot({ onClose }: ChatbotProps) {
           setActiveConvId(null);
           setMessages([{ role: 'bot', text: t('chatbot.welcome') }]);
         }
-      } catch (error) {
-        console.error('Error loading conversations:', error);
+      } catch {
+        // Error al cargar conversaciones
       } finally {
         setLoadingConvs(false);
       }
