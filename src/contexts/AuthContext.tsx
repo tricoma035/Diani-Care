@@ -80,8 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
             }
           } catch {
-            // Eliminar todos los console.log, console.error, console.warn y cualquier log.
-            // Eliminar variables no usadas.
+            // Error al crear usuario automáticamente
           }
         }
         return;
@@ -89,28 +88,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setAppUser(userData);
     } catch {
-      // Eliminar todos los console.log, console.error, console.warn y cualquier log.
-      // Eliminar variables no usadas.
+      // Error al obtener datos del usuario
     }
   }, []);
 
-  // Función para refrescar la sesión (puede ser llamada tras mutaciones)
+  // Función para refrescar la sesión (mejorada para producción)
   const refreshSession = useCallback(async () => {
     try {
+      // Forzar refresco del token
       const {
         data: { session },
-      } = await supabase.auth.getSession();
+        error,
+      } = await supabase.auth.refreshSession();
 
-      if (session?.user) {
+      if (error) {
+        // Si hay error al refrescar, intentar obtener sesión actual
+        const {
+          data: { session: currentSession },
+        } = await supabase.auth.getSession();
+
+        if (currentSession?.user) {
+          setUser(currentSession.user);
+          await fetchAppUser(currentSession.user.id);
+        } else {
+          // No hay sesión válida, limpiar estado
+          setUser(null);
+          setAppUser(null);
+        }
+      } else if (session?.user) {
         setUser(session.user);
         await fetchAppUser(session.user.id);
       } else {
-        // Si no hay sesión válida, limpiar estado
+        // No hay sesión válida, limpiar estado
         setUser(null);
         setAppUser(null);
       }
     } catch {
-      // Si hay error al obtener sesión, limpiar estado
+      // Error al refrescar sesión, limpiar estado
       setUser(null);
       setAppUser(null);
     } finally {
@@ -137,8 +151,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       return { error: null };
     } catch (error) {
-      // Eliminar todos los console.log, console.error, console.warn y cualquier log.
-      // Eliminar variables no usadas.
       return { error };
     }
   };
@@ -177,29 +189,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error };
       }
 
-      // Si el usuario no necesita confirmación de email, crear el perfil manualmente
-      if (data.user && !data.user.email_confirmed_at) {
-        try {
-          await supabase.from('users').insert([
-            {
-              id: data.user.id,
-              email: data.user.email,
-              full_name: fullName,
-              identity_number: identityNumber,
-              hospital,
-              job_position: jobPosition,
-            },
-          ]);
-        } catch {
-          // Eliminar todos los console.log, console.error, console.warn y cualquier log.
-          // Eliminar variables no usadas.
-        }
+      if (data.user) {
+        setUser(data.user);
+        await fetchAppUser(data.user.id);
       }
 
       return { error: null };
     } catch (error) {
-      // Eliminar todos los console.log, console.error, console.warn y cualquier log.
-      // Eliminar variables no usadas.
       return { error };
     }
   };
@@ -210,24 +206,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await supabase.auth.signOut();
       setUser(null);
       setAppUser(null);
-
-      // Limpiar cualquier estado local persistente
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('supabase.auth.token');
-      }
     } catch {
-      // Eliminar todos los console.log, console.error, console.warn y cualquier log.
-      // Eliminar variables no usadas.
+      // Error al cerrar sesión
     }
   };
 
   // Función para cambiar contraseña
   const changePassword = async (newPassword: string) => {
     try {
-      if (!user) {
-        return { error: { message: 'Usuario no autenticado' } };
-      }
-
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
       });
@@ -246,13 +232,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       return { error: null };
     } catch (error) {
-      // Eliminar todos los console.log, console.error, console.warn y cualquier log.
-      // Eliminar variables no usadas.
       return { error };
     }
   };
 
-  // Verificar sesión al cargar
+  // Verificar sesión al cargar (mejorado para producción)
   useEffect(() => {
     let mounted = true;
 
@@ -267,8 +251,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await fetchAppUser(session.user.id);
         }
       } catch {
-        // Eliminar todos los console.log, console.error, console.warn y cualquier log.
-        // Eliminar variables no usadas.
+        // Error al obtener sesión inicial
       } finally {
         if (mounted) {
           setLoading(false);
@@ -278,7 +261,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     getSession();
 
-    // Escuchar cambios en la autenticación
+    // Escuchar cambios en la autenticación (mejorado)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -293,6 +276,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setAppUser(null);
       } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+        setUser(session.user);
+        await fetchAppUser(session.user.id);
+      } else if (event === 'USER_UPDATED' && session?.user) {
         setUser(session.user);
         await fetchAppUser(session.user.id);
       }

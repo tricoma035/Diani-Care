@@ -15,6 +15,7 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import Chatbot from './Chatbot';
 import LanguageSelector from './LanguageSelector';
+import LoadingFallback from './LoadingFallback';
 import PatientDetail from './PatientDetail';
 import PatientList from './PatientList';
 import PatientModal from './PatientModal';
@@ -27,6 +28,7 @@ export default function Dashboard() {
   const { t } = useI18n();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('full_name');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
@@ -40,6 +42,8 @@ export default function Dashboard() {
   const loadPatients = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
+
       let query = supabase
         .from('patients')
         .select('*')
@@ -51,11 +55,15 @@ export default function Dashboard() {
         );
       }
 
-      const { data } = await query;
+      const { data, error: queryError } = await query;
+
+      if (queryError) {
+        throw queryError;
+      }
 
       setPatients(data || []);
     } catch {
-      // Eliminar todos los console.log, console.error y cualquier log.
+      setError('Error al cargar los pacientes');
     } finally {
       setLoading(false);
     }
@@ -106,12 +114,12 @@ export default function Dashboard() {
 
       setShowPatientModal(false);
       setEditingPatient(null);
-      loadPatients();
+      await loadPatients();
 
       // Refrescar sesión tras mutación para evitar problemas de carga infinita
       await refreshSession();
     } catch {
-      // Eliminar todos los console.log, console.error y cualquier log.
+      // Error al guardar paciente
     }
   };
 
@@ -122,16 +130,6 @@ export default function Dashboard() {
     }
 
     try {
-      // Registrar la eliminación antes de eliminar
-      await supabase.from('modification_logs').insert([
-        {
-          patient_id: patientId,
-          modified_by: appUser?.id || '',
-          action_type: 'delete',
-          changes: { deleted: true },
-        },
-      ]);
-
       const { error } = await supabase
         .from('patients')
         .delete()
@@ -141,32 +139,38 @@ export default function Dashboard() {
         throw error;
       }
 
-      loadPatients();
+      // Registrar la modificación
+      await supabase.from('modification_logs').insert([
+        {
+          patient_id: patientId,
+          modified_by: appUser?.id,
+          action_type: 'delete',
+          changes: { deleted: true },
+        },
+      ]);
+
+      await loadPatients();
 
       // Refrescar sesión tras mutación para evitar problemas de carga infinita
       await refreshSession();
     } catch {
-      // Eliminar todos los console.log, console.error y cualquier log.
+      // Error al eliminar paciente
     }
   };
 
-  // Función para editar paciente
   const handleEditPatient = (patient: Patient) => {
     setEditingPatient(patient);
     setShowPatientModal(true);
   };
 
-  // Función para ver detalles del paciente
   const handleViewPatient = (patient: Patient) => {
     setSelectedPatient(patient);
   };
 
-  // Función para cerrar detalles del paciente
   const handleClosePatientDetail = () => {
     setSelectedPatient(null);
   };
 
-  // Función para cambiar orden de clasificación
   const handleSort = (field: SortOption) => {
     if (sortBy === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -176,6 +180,21 @@ export default function Dashboard() {
     }
   };
 
+  // Mostrar fallback si hay error o carga
+  if (error) {
+    return (
+      <LoadingFallback
+        message={error}
+        showRetry={true}
+        onRetry={loadPatients}
+      />
+    );
+  }
+
+  if (loading) {
+    return <LoadingFallback message='Cargando pacientes...' />;
+  }
+
   return (
     <div className='min-h-screen bg-gray-50'>
       {/* Header */}
@@ -183,44 +202,32 @@ export default function Dashboard() {
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center h-16'>
             <div className='flex items-center space-x-4'>
-              <Building2 className='h-8 w-8 text-blue-600' />
-              {/* Contenido del header - versión desktop */}
-              <div className='hidden md:block'>
+              <Building2 className='h-8 w-8 text-primary-600' />
+              <div>
                 <h1 className='text-xl font-semibold text-gray-900'>
                   {t('dashboard.title')}
                 </h1>
                 <p className='text-sm text-gray-500'>
-                  {t('dashboard.subtitle')}
-                </p>
-                <p className='text-sm text-gray-500'>
                   {appUser?.hospital} - {appUser?.full_name}
                 </p>
               </div>
-              {/* Contenido del header - versión móvil */}
-              <div className='md:hidden flex items-center space-x-3'>
-                <div className='flex flex-col'>
-                  <span className='text-sm font-semibold text-gray-900'>
-                    {appUser?.full_name
-                      ?.split(' ')
-                      .map(n => n[0])
-                      .join('')
-                      .toUpperCase() || 'U'}
-                  </span>
-                  <span className='text-xs text-gray-500'>
-                    {appUser?.hospital?.split(' ')[0] || 'Hospital'}
-                  </span>
-                </div>
-              </div>
             </div>
 
-            <div className='flex items-center space-x-2 sm:space-x-4'>
+            <div className='flex items-center space-x-4'>
               <LanguageSelector />
               <button
+                onClick={() => setShowChatbot(true)}
+                className='flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-medical hover:bg-primary-700 transition-colors'
+              >
+                <MessageCircle className='h-4 w-4' />
+                <span>{t('dashboard.chatbot')}</span>
+              </button>
+              <button
                 onClick={signOut}
-                className='flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors'
+                className='flex items-center space-x-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-medical hover:bg-gray-300 transition-colors'
               >
                 <LogOut className='h-4 w-4' />
-                <span className='hidden sm:inline'>{t('auth.logout')}</span>
+                <span>{t('dashboard.signOut')}</span>
               </button>
             </div>
           </div>
@@ -230,56 +237,68 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
         {/* Search and Filters */}
-        <div className='mb-8'>
-          <div className='flex flex-col sm:flex-row gap-4 items-center justify-between'>
-            <div className='relative flex-1 max-w-md'>
-              <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400' />
+        <div className='mb-6 flex flex-col sm:flex-row gap-4'>
+          <div className='flex-1'>
+            <div className='relative'>
+              <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
               <input
                 type='text'
-                placeholder={t('patients.searchPatients')}
+                placeholder={t('dashboard.searchPlaceholder')}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className='w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                className='w-full pl-10 pr-4 py-2 border border-gray-300 rounded-medical focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent'
               />
             </div>
-            <div className='flex items-center space-x-2 sm:space-x-4'>
-              <button
-                onClick={() => setShowPatientModal(true)}
-                className='flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm'
-              >
-                <Plus className='h-4 w-4' />
-                <span className='hidden sm:inline'>
-                  {t('patients.addPatient')}
-                </span>
-                <span className='sm:hidden'>+</span>
-              </button>
-              <button
-                onClick={() => handleSort('full_name')}
-                className='hidden sm:flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors'
-              >
-                <span>{t('patients.fullName')}</span>
-                {sortBy === 'full_name' ? (
-                  sortOrder === 'asc' ? (
-                    <SortAsc className='h-4 w-4' />
-                  ) : (
-                    <SortDesc className='h-4 w-4' />
-                  )
-                ) : null}
-              </button>
-              <button
-                onClick={() => handleSort('created_at')}
-                className='hidden sm:flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors'
-              >
-                <span>{t('patients.createdAt')}</span>
-                {sortBy === 'created_at' ? (
-                  sortOrder === 'asc' ? (
-                    <SortAsc className='h-4 w-4' />
-                  ) : (
-                    <SortDesc className='h-4 w-4' />
-                  )
-                ) : null}
-              </button>
-            </div>
+          </div>
+
+          <div className='flex gap-2'>
+            <button
+              onClick={() => handleSort('full_name')}
+              className={`flex items-center space-x-1 px-3 py-2 rounded-medical border transition-colors ${
+                sortBy === 'full_name'
+                  ? 'bg-primary-100 border-primary-300 text-primary-700'
+                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <span>{t('dashboard.name')}</span>
+              {sortBy === 'full_name' ? (
+                sortOrder === 'asc' ? (
+                  <SortAsc className='h-4 w-4' />
+                ) : (
+                  <SortDesc className='h-4 w-4' />
+                )
+              ) : (
+                <SortAsc className='h-4 w-4 text-gray-400' />
+              )}
+            </button>
+
+            <button
+              onClick={() => handleSort('created_at')}
+              className={`flex items-center space-x-1 px-3 py-2 rounded-medical border transition-colors ${
+                sortBy === 'created_at'
+                  ? 'bg-primary-100 border-primary-300 text-primary-700'
+                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <span>{t('dashboard.date')}</span>
+              {sortBy === 'created_at' ? (
+                sortOrder === 'asc' ? (
+                  <SortAsc className='h-4 w-4' />
+                ) : (
+                  <SortDesc className='h-4 w-4' />
+                )
+              ) : (
+                <SortAsc className='h-4 w-4 text-gray-400' />
+              )}
+            </button>
+
+            <button
+              onClick={() => setShowPatientModal(true)}
+              className='flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-medical hover:bg-primary-700 transition-colors'
+            >
+              <Plus className='h-4 w-4' />
+              <span>{t('dashboard.addPatient')}</span>
+            </button>
           </div>
         </div>
 
@@ -291,35 +310,27 @@ export default function Dashboard() {
           onDeleteAction={handleDeletePatient}
           onViewAction={handleViewPatient}
         />
-
-        {/* Modals */}
-        {showPatientModal && (
-          <PatientModal
-            patient={editingPatient}
-            onSubmitAction={handlePatientSubmit}
-            onCloseAction={() => {
-              setShowPatientModal(false);
-              setEditingPatient(null);
-            }}
-          />
-        )}
-
-        {selectedPatient && (
-          <PatientDetail
-            patient={selectedPatient}
-            onCloseAction={handleClosePatientDetail}
-          />
-        )}
       </main>
-      {/* Botón flotante para el chatbot */}
-      <button
-        onClick={() => setShowChatbot(true)}
-        className='fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-4 flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500'
-        aria-label='Abrir Chatbot'
-      >
-        <MessageCircle className='h-6 w-6' />
-      </button>
-      {/* Modal o panel del chatbot */}
+
+      {/* Modals */}
+      {showPatientModal && (
+        <PatientModal
+          patient={editingPatient}
+          onSubmitAction={handlePatientSubmit}
+          onCloseAction={() => {
+            setShowPatientModal(false);
+            setEditingPatient(null);
+          }}
+        />
+      )}
+
+      {selectedPatient && (
+        <PatientDetail
+          patient={selectedPatient}
+          onCloseAction={handleClosePatientDetail}
+        />
+      )}
+
       {showChatbot && <Chatbot onClose={() => setShowChatbot(false)} />}
     </div>
   );
