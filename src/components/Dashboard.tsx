@@ -24,7 +24,7 @@ type SortOption = 'full_name' | 'created_at';
 type SortOrder = 'asc' | 'desc';
 
 export default function Dashboard() {
-  const { appUser, signOut, refreshSession } = useAuth();
+  const { appUser, signOut } = useAuth();
   const { t } = useI18n();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -114,12 +114,13 @@ export default function Dashboard() {
 
       setShowPatientModal(false);
       setEditingPatient(null);
-      await loadPatients();
 
-      // Refrescar sesión tras mutación para evitar problemas de carga infinita
-      await refreshSession();
+      // Cargar pacientes directamente (sin refreshSession innecesario)
+      await loadPatients();
     } catch {
-      // Error al guardar paciente
+      // Error al guardar paciente - asegurar que el modal se cierre
+      setShowPatientModal(false);
+      setEditingPatient(null);
     }
   };
 
@@ -149,10 +150,8 @@ export default function Dashboard() {
         },
       ]);
 
+      // Cargar pacientes directamente (sin refreshSession innecesario)
       await loadPatients();
-
-      // Refrescar sesión tras mutación para evitar problemas de carga infinita
-      await refreshSession();
     } catch {
       // Error al eliminar paciente
     }

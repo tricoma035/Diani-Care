@@ -32,7 +32,7 @@ interface ChatConversation {
 
 export default function Chatbot({ onClose }: ChatbotProps) {
   const { t, language } = useI18n();
-  const { appUser, refreshSession } = useAuth();
+  const { appUser } = useAuth();
   const [queryType, setQueryType] = useState<'db' | 'internet'>('db');
   const [messages, setMessages] = useState<
     { role: 'user' | 'bot'; text: string }[]
@@ -103,10 +103,6 @@ export default function Chatbot({ onClose }: ChatbotProps) {
   // Guardar conversación actual al cerrar
   const handleClose = async () => {
     await saveConversation(messages);
-
-    // Refrescar sesión tras mutación para evitar problemas de carga infinita
-    await refreshSession();
-
     onClose();
   };
 
@@ -130,9 +126,6 @@ export default function Chatbot({ onClose }: ChatbotProps) {
       setConversations([data, ...conversations]);
       setActiveConvId(data.id);
       setMessages(data.messages);
-
-      // Refrescar sesión tras mutación para evitar problemas de carga infinita
-      await refreshSession();
     }
   };
 
@@ -166,9 +159,6 @@ export default function Chatbot({ onClose }: ChatbotProps) {
             setMessages([{ role: 'bot', text: t('chatbot.welcome') }]);
           }
         }
-
-        // Refrescar sesión tras mutación para evitar problemas de carga infinita
-        await refreshSession();
       }
     } catch {
       // Manejar error

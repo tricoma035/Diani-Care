@@ -29,16 +29,8 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refrescar la sesión si es necesario
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  // Si no hay sesión y no estamos en la página de login, redirigir
-  if (!session && !request.nextUrl.pathname.startsWith('/auth')) {
-    const redirectUrl = new URL('/auth', request.url);
-    return NextResponse.redirect(redirectUrl);
-  }
+  // Solo refrescar la sesión para mantener las cookies actualizadas
+  await supabase.auth.getSession();
 
   return supabaseResponse;
 }

@@ -17,7 +17,7 @@ export default function FileUploadModal({
   onCloseAction,
   onFileUploadedAction,
 }: FileUploadModalProps) {
-  const { appUser, refreshSession } = useAuth();
+  const { appUser } = useAuth();
   const { t } = useI18n();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -135,9 +135,6 @@ export default function FileUploadModal({
       setSelectedFile(null);
       onFileUploadedAction();
       onCloseAction();
-
-      // Refrescar sesión tras mutación para evitar problemas de carga infinita
-      await refreshSession();
     } catch {
       setError('Error al subir el archivo. Por favor, intenta de nuevo.');
     } finally {

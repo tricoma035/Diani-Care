@@ -92,10 +92,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Función para refrescar la sesión (mejorada para producción)
+  // Función para refrescar la sesión (optimizada para producción)
   const refreshSession = useCallback(async () => {
     try {
-      // Forzar refresco del token
+      // Solo refrescar si es necesario (evitar llamadas innecesarias)
       const {
         data: { session },
         error,
@@ -127,8 +127,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Error al refrescar sesión, limpiar estado
       setUser(null);
       setAppUser(null);
-    } finally {
-      setLoading(false);
     }
   }, [fetchAppUser]);
 

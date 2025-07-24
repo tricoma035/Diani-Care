@@ -29,7 +29,7 @@ export default function PatientDetail({
   onCloseAction,
 }: PatientDetailProps) {
   const { t, language } = useI18n();
-  const { appUser, refreshSession } = useAuth();
+  const { appUser } = useAuth();
   const [notes, setNotes] = useState<PatientNote[]>([]);
   const [files, setFiles] = useState<PatientFile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -126,9 +126,6 @@ export default function PatientDetail({
 
       // Recargar datos inmediatamente
       await loadPatientData();
-
-      // Refrescar sesión tras mutación para evitar problemas de carga infinita
-      await refreshSession();
     } catch {
       // Eliminar todos los console.log, console.error y cualquier log.
       // Eliminar variables no usadas.
@@ -152,9 +149,6 @@ export default function PatientDetail({
       }
 
       loadPatientData();
-
-      // Refrescar sesión tras mutación para evitar problemas de carga infinita
-      await refreshSession();
     } catch {
       // Eliminar todos los console.log, console.error y cualquier log.
       // Eliminar variables no usadas.
@@ -188,8 +182,7 @@ export default function PatientDetail({
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch {
-      // Eliminar todos los console.log, console.error y cualquier log.
-      // Eliminar variables no usadas.
+      // Error al descargar archivo
     }
   };
 
@@ -221,11 +214,10 @@ export default function PatientDetail({
 
       loadPatientData();
 
-      // Refrescar sesión tras mutación para evitar problemas de carga infinita
-      await refreshSession();
+      // Recargar datos después de eliminar archivo
+      await loadPatientData();
     } catch {
-      // Eliminar todos los console.log, console.error y cualquier log.
-      // Eliminar variables no usadas.
+      // Error al eliminar archivo
     }
   };
 

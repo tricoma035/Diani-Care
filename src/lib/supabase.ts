@@ -18,6 +18,12 @@ export const supabase = createClient(
         'X-Client-Info': 'hospital-kenia-app',
       },
     },
+    // Configuración adicional para estabilidad en producción
+    realtime: {
+      params: {
+        eventsPerSecond: 10,
+      },
+    },
   }
 );
 
