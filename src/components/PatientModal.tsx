@@ -1,12 +1,12 @@
 'use client';
 
+import { useI18n } from '@/lib/i18n';
+import { Patient } from '@/lib/supabase';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Calendar, Hash, User, UserCheck, X } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { X, User, Hash, Calendar, UserCheck } from 'lucide-react';
-import { Patient } from '@/lib/supabase';
-import { useI18n } from '@/lib/i18n';
 
 // Esquema de validación para pacientes
 const patientSchema = z.object({
@@ -25,14 +25,14 @@ type PatientForm = z.infer<typeof patientSchema>;
 
 interface PatientModalProps {
   patient?: Patient | null;
-  onSubmit: (data: Partial<Patient>) => void;
-  onClose: () => void;
+  onSubmitAction: (data: Partial<Patient>) => void;
+  onCloseAction: () => void;
 }
 
 export default function PatientModal({
   patient,
-  onSubmit,
-  onClose,
+  onSubmitAction,
+  onCloseAction,
 }: PatientModalProps) {
   const { t } = useI18n();
   const isEditing = !!patient;
@@ -67,7 +67,7 @@ export default function PatientModal({
   }, [patient, form]);
 
   const handleSubmit = (data: PatientForm) => {
-    onSubmit(data);
+    onSubmitAction(data);
   };
 
   return (
@@ -97,7 +97,7 @@ export default function PatientModal({
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={onCloseAction}
             className='text-gray-400 hover:text-gray-600 transition-colors'
           >
             <X className='h-6 w-6' />
@@ -237,7 +237,7 @@ export default function PatientModal({
           <div className='flex items-center justify-end space-x-3 pt-6 border-t'>
             <button
               type='button'
-              onClick={onClose}
+              onClick={onCloseAction}
               className='px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors'
             >
               {t('common.cancel')}

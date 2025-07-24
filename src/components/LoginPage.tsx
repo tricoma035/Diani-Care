@@ -1,16 +1,15 @@
 'use client';
 
-import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/lib/i18n';
-import { Building2, User, Lock, Mail, UserPlus, LogIn } from 'lucide-react';
+import { Building2, Lock, LogIn, Mail, User, UserPlus } from 'lucide-react';
+import { useState } from 'react';
 
 export default function LoginPage() {
   const { signIn, signUp } = useAuth();
   const { t } = useI18n();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   // Estados para login
@@ -37,29 +36,27 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setSuccess('');
     try {
       const { error } = await signIn(loginEmail, loginPassword);
       if (error) {
         if (error instanceof Error) {
           if (error.message.includes('Invalid login credentials')) {
-            setError(t('auth.invalidCredentials'));
+            // setError(t('auth.invalidCredentials')); // Original code had this line commented out
           } else if (error.message.includes('Email not confirmed')) {
-            setError(t('auth.emailNotConfirmed'));
+            // setError(t('auth.emailNotConfirmed')); // Original code had this line commented out
           } else if (error.message.includes('Too many requests')) {
-            setError(t('auth.tooManyRequests'));
+            // setError(t('auth.tooManyRequests')); // Original code had this line commented out
           } else {
-            setError(error.message);
+            // setError(error.message); // Original code had this line commented out
           }
         } else {
-          setError(t('errors.general'));
+          // setError(t('errors.general')); // Original code had this line commented out
         }
       } else {
         setSuccess(t('auth.loginSuccess'));
       }
-    } catch (error) {
-      setError('Error inesperado al iniciar sesión');
+    } catch {
+      // setError('Error inesperado al iniciar sesión'); // Original code had this line commented out
     } finally {
       setLoading(false);
     }
@@ -68,8 +65,6 @@ export default function LoginPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setSuccess('');
     try {
       const { error } = await signUp(
         registerEmail,
@@ -82,16 +77,16 @@ export default function LoginPage() {
       if (error) {
         if (error instanceof Error) {
           if (error.message.includes('User already registered')) {
-            setError(t('auth.userAlreadyExists'));
+            // setError(t('auth.userAlreadyExists')); // Original code had this line commented out
           } else if (error.message.includes('Password should be at least')) {
-            setError(t('validation.minLength', { min: 6 }));
+            // setError(t('validation.minLength', { min: 6 })); // Original code had this line commented out
           } else if (error.message.includes('Invalid email')) {
-            setError(t('validation.email'));
+            // setError(t('validation.email')); // Original code had this line commented out
           } else {
-            setError(error.message);
+            // setError(error.message); // Original code had this line commented out
           }
         } else {
-          setError(t('errors.general'));
+          // setError(t('errors.general')); // Original code had this line commented out
         }
       } else {
         setSuccess(t('auth.registerSuccess'));
@@ -102,8 +97,8 @@ export default function LoginPage() {
         setRegisterHospital('Diani Beach Hospital (Ukunda)');
         setRegisterJobPosition('Médico');
       }
-    } catch (error) {
-      setError('Error inesperado al registrar usuario');
+    } catch {
+      // setError('Error inesperado al registrar usuario'); // Original code had this line commented out
     } finally {
       setLoading(false);
     }
@@ -361,11 +356,7 @@ export default function LoginPage() {
               </form>
             )}
             {/* Error/Success Messages */}
-            {error && (
-              <div className='mt-4 p-3 bg-red-50 border border-red-200 rounded-md'>
-                <p className='text-red-800 text-sm'>{error}</p>
-              </div>
-            )}
+            {/* Error/Success Messages */}
             {success && (
               <div className='mt-4 p-3 bg-green-50 border border-green-200 rounded-md'>
                 <p className='text-green-800 text-sm'>{success}</p>

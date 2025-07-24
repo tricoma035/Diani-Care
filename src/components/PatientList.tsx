@@ -1,23 +1,23 @@
 'use client';
 
-import { Patient } from '@/lib/supabase';
-import { Edit, Trash2, Eye, User, Calendar } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
+import { Patient } from '@/lib/supabase';
+import { Calendar, Edit, Eye, Trash2, User } from 'lucide-react';
 
 interface PatientListProps {
   patients: Patient[];
   loading: boolean;
-  onEdit: (patient: Patient) => void;
-  onDelete: (patientId: string) => void;
-  onView: (patient: Patient) => void;
+  onEditAction: (patient: Patient) => void;
+  onDeleteAction: (patientId: string) => void;
+  onViewAction: (patient: Patient) => void;
 }
 
 export default function PatientList({
   patients,
   loading,
-  onEdit,
-  onDelete,
-  onView,
+  onEditAction,
+  onDeleteAction,
+  onViewAction,
 }: PatientListProps) {
   const { t, language } = useI18n();
 
@@ -135,21 +135,21 @@ export default function PatientList({
                 <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
                   <div className='flex items-center justify-end space-x-2'>
                     <button
-                      onClick={() => onView(patient)}
+                      onClick={() => onViewAction(patient)}
                       className='text-blue-600 hover:text-blue-900 p-1 rounded-md hover:bg-blue-50 transition-colors'
                       title={t('patients.viewDetails')}
                     >
                       <Eye className='h-4 w-4' />
                     </button>
                     <button
-                      onClick={() => onEdit(patient)}
+                      onClick={() => onEditAction(patient)}
                       className='text-green-600 hover:text-green-900 p-1 rounded-md hover:bg-green-50 transition-colors'
                       title={t('patients.editPatient')}
                     >
                       <Edit className='h-4 w-4' />
                     </button>
                     <button
-                      onClick={() => onDelete(patient.id)}
+                      onClick={() => onDeleteAction(patient.id)}
                       className='text-red-600 hover:text-red-900 p-1 rounded-md hover:bg-red-50 transition-colors'
                       title={t('patients.deletePatient')}
                     >

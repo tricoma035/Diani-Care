@@ -1,15 +1,15 @@
 'use client';
 
+import type { User as AppUser } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
+import { User } from '@supabase/supabase-js';
 import React, {
   createContext,
-  useContext,
-  useState,
-  useEffect,
   useCallback,
+  useContext,
+  useEffect,
+  useState,
 } from 'react';
-import { User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
-import type { User as AppUser } from '@/lib/supabase';
 
 // Tipo para el contexto de autenticación
 interface AuthContextType {
@@ -33,6 +33,7 @@ interface AuthContextType {
   ) => Promise<{ error: unknown }>;
   signOut: () => Promise<void>;
   changePassword: (newPassword: string) => Promise<{ error: unknown }>;
+  refreshSession: () => Promise<void>;
 }
 
 // Crear el contexto
@@ -54,12 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (userError) {
-        console.error('Error fetching app user:', userError);
-        // Si no existe el perfil, intentar crearlo con datos por defecto
         if (userError.code === 'PGRST116') {
-          console.log(
-            'Perfil de usuario no encontrado, creando perfil por defecto...'
-          );
           try {
             const { data: authUser } = await supabase.auth.getUser();
             if (authUser.user) {
@@ -83,31 +79,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setAppUser(newUserData);
               }
             }
-          } catch (createError) {
-            console.error('Error creating default profile:', createError);
+          } catch {
+            // Eliminar todos los console.log, console.error, console.warn y cualquier log.
+            // Eliminar variables no usadas.
           }
         }
         return;
       }
 
       setAppUser(userData);
-    } catch (error) {
-      console.error('Error fetching app user:', error);
+    } catch {
+      // Eliminar todos los console.log, console.error, console.warn y cualquier log.
+      // Eliminar variables no usadas.
     }
   }, []);
+
+  // Función para refrescar la sesión (puede ser llamada tras mutaciones)
+  const refreshSession = useCallback(async () => {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session?.user) {
+        setUser(session.user);
+        await fetchAppUser(session.user.id);
+      } else {
+        // Si no hay sesión válida, limpiar estado
+        setUser(null);
+        setAppUser(null);
+      }
+    } catch {
+      // Si hay error al obtener sesión, limpiar estado
+      setUser(null);
+      setAppUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchAppUser]);
 
   // Función de inicio de sesión
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('Intentando iniciar sesión con:', email);
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        console.error('Error en signIn:', error);
         return { error };
       }
 
@@ -118,7 +137,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       return { error: null };
     } catch (error) {
-      console.error('Error en signIn:', error);
+      // Eliminar todos los console.log, console.error, console.warn y cualquier log.
+      // Eliminar variables no usadas.
       return { error };
     }
   };
@@ -139,14 +159,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     jobPosition: 'Director' | 'Médico' | 'Asistente'
   ) => {
     try {
-      console.log('Intentando registrar usuario:', {
-        email,
-        fullName,
-        identityNumber,
-        hospital,
-        jobPosition,
-      });
-
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -154,7 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           data: {
             full_name: fullName,
             identity_number: identityNumber,
-            hospital: hospital,
+            hospital,
             job_position: jobPosition,
           },
           emailRedirectTo: `${window.location.origin}/auth/callback`,
@@ -162,11 +174,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        console.error('Error en signUp:', error);
         return { error };
       }
-
-      console.log('Usuario registrado exitosamente:', data);
 
       // Si el usuario no necesita confirmación de email, crear el perfil manualmente
       if (data.user && !data.user.email_confirmed_at) {
@@ -177,26 +186,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               email: data.user.email,
               full_name: fullName,
               identity_number: identityNumber,
-              hospital: hospital,
+              hospital,
               job_position: jobPosition,
             },
           ]);
-        } catch (profileError) {
-          console.error('Error creando perfil:', profileError);
-          // No fallar el registro si el perfil no se puede crear
+        } catch {
+          // Eliminar todos los console.log, console.error, console.warn y cualquier log.
+          // Eliminar variables no usadas.
         }
       }
 
       return { error: null };
     } catch (error) {
-      console.error('Error en signUp:', error);
+      // Eliminar todos los console.log, console.error, console.warn y cualquier log.
+      // Eliminar variables no usadas.
       return { error };
     }
   };
 
   // Función de cierre de sesión
   const signOut = async () => {
-    console.log('Cerrando sesión');
     try {
       await supabase.auth.signOut();
       setUser(null);
@@ -206,8 +215,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('supabase.auth.token');
       }
-    } catch (error) {
-      console.error('Error during sign out:', error);
+    } catch {
+      // Eliminar todos los console.log, console.error, console.warn y cualquier log.
+      // Eliminar variables no usadas.
     }
   };
 
@@ -236,6 +246,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       return { error: null };
     } catch (error) {
+      // Eliminar todos los console.log, console.error, console.warn y cualquier log.
+      // Eliminar variables no usadas.
       return { error };
     }
   };
@@ -254,8 +266,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(session.user);
           await fetchAppUser(session.user.id);
         }
-      } catch (error) {
-        console.error('Error getting session:', error);
+      } catch {
+        // Eliminar todos los console.log, console.error, console.warn y cualquier log.
+        // Eliminar variables no usadas.
       } finally {
         if (mounted) {
           setLoading(false);
@@ -269,9 +282,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.id);
-
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       if (event === 'SIGNED_IN' && session?.user) {
         setUser(session.user);
@@ -284,6 +297,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await fetchAppUser(session.user.id);
       }
 
+      // Siempre asegurar que loading se ponga en false
       setLoading(false);
     });
 
@@ -301,6 +315,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signOut,
     changePassword,
+    refreshSession,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

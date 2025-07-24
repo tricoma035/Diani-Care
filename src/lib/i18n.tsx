@@ -2,10 +2,10 @@
 // Sistema de internacionalización nativo para Next.js 15
 import {
   createContext,
-  useContext,
-  useState,
-  useEffect,
   ReactNode,
+  useContext,
+  useEffect,
+  useState,
 } from 'react';
 
 // Tipos
@@ -14,7 +14,7 @@ export type Language = 'es' | 'en' | 'sw';
 interface I18nContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string, params?: Record<string, any>) => string;
+  t: (key: string, params?: Record<string, unknown>) => string;
 }
 
 // Traducciones
@@ -675,14 +675,14 @@ export const useI18n = () => {
 const getTranslation = (
   key: string,
   language: Language,
-  params?: Record<string, any>
+  params?: Record<string, unknown>
 ): string => {
   const keys = key.split('.');
-  let value: any = translations[language];
+  let value: unknown = translations[language];
 
   for (const k of keys) {
     if (value && typeof value === 'object' && k in value) {
-      value = value[k];
+      value = (value as Record<string, unknown>)[k];
     } else {
       // Solo hacer fallback si no estamos ya en inglés
       if (language !== 'en') {
@@ -743,7 +743,7 @@ export const I18nProvider = ({ children }: I18nProviderProps) => {
     }
   };
 
-  const t = (key: string, params?: Record<string, any>) => {
+  const t = (key: string, params?: Record<string, unknown>) => {
     return getTranslation(key, language, params);
   };
 

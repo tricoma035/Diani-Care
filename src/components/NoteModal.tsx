@@ -1,12 +1,12 @@
 'use client';
 
+import { useI18n } from '@/lib/i18n';
+import { PatientNote } from '@/lib/supabase';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Eye, FileText, Pill, Stethoscope, X } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { X, FileText, Stethoscope, Pill, Eye } from 'lucide-react';
-import { PatientNote } from '@/lib/supabase';
-import { useI18n } from '@/lib/i18n';
 
 // Esquema de validación para notas médicas
 const noteSchema = z.object({
@@ -19,11 +19,15 @@ type NoteForm = z.infer<typeof noteSchema>;
 
 interface NoteModalProps {
   note?: PatientNote | null;
-  onSubmit: (data: Partial<PatientNote>) => void;
-  onClose: () => void;
+  onSubmitAction: (data: Partial<PatientNote>) => void;
+  onCloseAction: () => void;
 }
 
-export default function NoteModal({ note, onSubmit, onClose }: NoteModalProps) {
+export default function NoteModal({
+  note,
+  onSubmitAction,
+  onCloseAction,
+}: NoteModalProps) {
   const { t } = useI18n();
   const isEditing = !!note;
 
@@ -54,7 +58,7 @@ export default function NoteModal({ note, onSubmit, onClose }: NoteModalProps) {
   }, [note, form]);
 
   const handleSubmit = (data: NoteForm) => {
-    onSubmit(data);
+    onSubmitAction(data);
   };
 
   return (
@@ -78,7 +82,7 @@ export default function NoteModal({ note, onSubmit, onClose }: NoteModalProps) {
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={onCloseAction}
             className='text-gray-400 hover:text-gray-600 transition-colors'
           >
             <X className='h-6 w-6' />
@@ -187,7 +191,7 @@ export default function NoteModal({ note, onSubmit, onClose }: NoteModalProps) {
           <div className='flex items-center justify-end space-x-3 pt-6 border-t'>
             <button
               type='button'
-              onClick={onClose}
+              onClick={onCloseAction}
               className='px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors'
             >
               {t('common.cancel')}

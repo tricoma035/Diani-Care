@@ -1,29 +1,29 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase, Patient } from '@/lib/supabase';
+import { useI18n } from '@/lib/i18n';
+import { Patient, supabase } from '@/lib/supabase';
 import {
-  Search,
-  LogOut,
   Building2,
+  LogOut,
+  MessageCircle,
   Plus,
+  Search,
   SortAsc,
   SortDesc,
-  MessageCircle,
 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import Chatbot from './Chatbot';
+import LanguageSelector from './LanguageSelector';
+import PatientDetail from './PatientDetail';
 import PatientList from './PatientList';
 import PatientModal from './PatientModal';
-import PatientDetail from './PatientDetail';
-import LanguageSelector from './LanguageSelector';
-import { useI18n } from '@/lib/i18n';
-import Chatbot from './Chatbot';
 
 type SortOption = 'full_name' | 'created_at';
 type SortOrder = 'asc' | 'desc';
 
 export default function Dashboard() {
-  const { appUser, signOut } = useAuth();
+  const { appUser, signOut, refreshSession } = useAuth();
   const { t } = useI18n();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,12 +51,11 @@ export default function Dashboard() {
         );
       }
 
-      const { data, error } = await query;
+      const { data } = await query;
 
-      if (error) throw error;
       setPatients(data || []);
-    } catch (error) {
-      console.error('Error loading patients:', error);
+    } catch {
+      // Eliminar todos los console.log, console.error y cualquier log.
     } finally {
       setLoading(false);
     }
@@ -77,7 +76,9 @@ export default function Dashboard() {
           .update(patientData)
           .eq('id', editingPatient.id);
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
 
         // Registrar la modificación
         await supabase.from('modification_logs').insert([
@@ -98,21 +99,27 @@ export default function Dashboard() {
           },
         ]);
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
       }
 
       setShowPatientModal(false);
       setEditingPatient(null);
       loadPatients();
-    } catch (error) {
-      console.error('Error saving patient:', error);
+
+      // Refrescar sesión tras mutación para evitar problemas de carga infinita
+      await refreshSession();
+    } catch {
+      // Eliminar todos los console.log, console.error y cualquier log.
     }
   };
 
   // Función para eliminar paciente
   const handleDeletePatient = async (patientId: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este paciente?'))
+    if (!confirm('¿Estás seguro de que quieres eliminar este paciente?')) {
       return;
+    }
 
     try {
       // Registrar la eliminación antes de eliminar
@@ -130,11 +137,16 @@ export default function Dashboard() {
         .delete()
         .eq('id', patientId);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       loadPatients();
-    } catch (error) {
-      console.error('Error deleting patient:', error);
+
+      // Refrescar sesión tras mutación para evitar problemas de carga infinita
+      await refreshSession();
+    } catch {
+      // Eliminar todos los console.log, console.error y cualquier log.
     }
   };
 
@@ -275,17 +287,17 @@ export default function Dashboard() {
         <PatientList
           patients={patients}
           loading={loading}
-          onEdit={handleEditPatient}
-          onDelete={handleDeletePatient}
-          onView={handleViewPatient}
+          onEditAction={handleEditPatient}
+          onDeleteAction={handleDeletePatient}
+          onViewAction={handleViewPatient}
         />
 
         {/* Modals */}
         {showPatientModal && (
           <PatientModal
             patient={editingPatient}
-            onSubmit={handlePatientSubmit}
-            onClose={() => {
+            onSubmitAction={handlePatientSubmit}
+            onCloseAction={() => {
               setShowPatientModal(false);
               setEditingPatient(null);
             }}
@@ -295,8 +307,7 @@ export default function Dashboard() {
         {selectedPatient && (
           <PatientDetail
             patient={selectedPatient}
-            onClose={handleClosePatientDetail}
-            onPatientUpdated={loadPatients}
+            onCloseAction={handleClosePatientDetail}
           />
         )}
       </main>

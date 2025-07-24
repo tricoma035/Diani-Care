@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { useI18n } from '@/lib/i18n';
-import { Globe, ChevronDown } from 'lucide-react';
+import { ChevronDown, Globe } from 'lucide-react';
+import { useState } from 'react';
 
 const LanguageSelector = () => {
   const { language, setLanguage, t } = useI18n();
@@ -42,19 +42,19 @@ const LanguageSelector = () => {
       {isOpen && (
         <div className='absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50'>
           <div className='py-1'>
-            {languages.map(language => (
+            {languages.map(languageOption => (
               <button
-                key={language.code}
-                onClick={() => handleLanguageChange(language.code)}
+                key={languageOption.code}
+                onClick={() => handleLanguageChange(languageOption.code)}
                 className={`w-full flex items-center space-x-3 px-4 py-2 text-sm hover:bg-gray-100 transition-colors ${
-                  language === language.code
-                    ? 'bg-blue-50 text-blue-700'
+                  language === languageOption.code
+                    ? 'bg-blue-50 text-blue-700 font-semibold'
                     : 'text-gray-700'
                 }`}
               >
-                <span className='text-lg'>{language.flag}</span>
-                <span>{language.name}</span>
-                {language === language.code && (
+                <span className='text-lg'>{languageOption.flag}</span>
+                <span>{languageOption.name}</span>
+                {language === languageOption.code && (
                   <div className='ml-auto w-2 h-2 bg-blue-600 rounded-full'></div>
                 )}
               </button>

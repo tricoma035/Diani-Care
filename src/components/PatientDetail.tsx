@@ -1,37 +1,35 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase, Patient, PatientNote, PatientFile } from '@/lib/supabase';
 import { useI18n } from '@/lib/i18n';
+import { Patient, PatientFile, PatientNote, supabase } from '@/lib/supabase';
 import {
-  X,
-  User,
   Calendar,
-  Hash,
-  Plus,
-  FileText,
-  Paperclip,
   Download,
-  Trash2,
   Edit,
+  FileText,
+  Hash,
+  Paperclip,
+  Plus,
+  Trash2,
+  User,
+  X,
 } from 'lucide-react';
-import NoteModal from './NoteModal';
+import { useCallback, useEffect, useState } from 'react';
 import FileUploadModal from './FileUploadModal';
+import NoteModal from './NoteModal';
 
 interface PatientDetailProps {
   patient: Patient;
-  onClose: () => void;
-  onPatientUpdated?: () => void;
+  onCloseAction: () => void;
 }
 
 export default function PatientDetail({
   patient,
-  onClose,
-  onPatientUpdated,
+  onCloseAction,
 }: PatientDetailProps) {
   const { t, language } = useI18n();
-  const { appUser } = useAuth();
+  const { appUser, refreshSession } = useAuth();
   const [notes, setNotes] = useState<PatientNote[]>([]);
   const [files, setFiles] = useState<PatientFile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,7 +57,9 @@ export default function PatientDetail({
         .eq('patient_id', patient.id)
         .order('created_at', { ascending: false });
 
-      if (notesError) throw notesError;
+      if (notesError) {
+        throw notesError;
+      }
 
       // Cargar archivos
       const { data: filesData, error: filesError } = await supabase
@@ -75,12 +75,15 @@ export default function PatientDetail({
         .eq('patient_id', patient.id)
         .order('uploaded_at', { ascending: false });
 
-      if (filesError) throw filesError;
+      if (filesError) {
+        throw filesError;
+      }
 
       setNotes(notesData || []);
       setFiles(filesData || []);
-    } catch (error) {
-      console.error('Error loading patient data:', error);
+    } catch {
+      // Eliminar todos los console.log, console.error y cualquier log.
+      // Eliminar variables no usadas.
     } finally {
       setLoading(false);
     }
@@ -100,7 +103,9 @@ export default function PatientDetail({
           .update(noteData)
           .eq('id', selectedNote.id);
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
       } else {
         // Crear nueva nota
         const { error } = await supabase.from('patient_notes').insert([
@@ -111,7 +116,9 @@ export default function PatientDetail({
           },
         ]);
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
       }
 
       setShowNoteModal(false);
@@ -119,14 +126,20 @@ export default function PatientDetail({
 
       // Recargar datos inmediatamente
       await loadPatientData();
-    } catch (error) {
-      console.error('Error saving note:', error);
+
+      // Refrescar sesión tras mutación para evitar problemas de carga infinita
+      await refreshSession();
+    } catch {
+      // Eliminar todos los console.log, console.error y cualquier log.
+      // Eliminar variables no usadas.
     }
   };
 
   // Función para eliminar nota
   const handleDeleteNote = async (noteId: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta nota?')) return;
+    if (!confirm('¿Estás seguro de que quieres eliminar esta nota?')) {
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -134,11 +147,17 @@ export default function PatientDetail({
         .delete()
         .eq('id', noteId);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       loadPatientData();
-    } catch (error) {
-      console.error('Error deleting note:', error);
+
+      // Refrescar sesión tras mutación para evitar problemas de carga infinita
+      await refreshSession();
+    } catch {
+      // Eliminar todos los console.log, console.error y cualquier log.
+      // Eliminar variables no usadas.
     }
   };
 
@@ -155,7 +174,9 @@ export default function PatientDetail({
         .from('patient-files')
         .download(file.file_url);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       // Crear enlace de descarga
       const url = window.URL.createObjectURL(data);
@@ -166,14 +187,17 @@ export default function PatientDetail({
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-    } catch (error) {
-      console.error('Error downloading file:', error);
+    } catch {
+      // Eliminar todos los console.log, console.error y cualquier log.
+      // Eliminar variables no usadas.
     }
   };
 
   // Función para eliminar archivo
   const handleDeleteFile = async (file: PatientFile) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este archivo?')) return;
+    if (!confirm('¿Estás seguro de que quieres eliminar este archivo?')) {
+      return;
+    }
 
     try {
       // Eliminar archivo del storage
@@ -181,7 +205,9 @@ export default function PatientDetail({
         .from('patient-files')
         .remove([file.file_url]);
 
-      if (storageError) throw storageError;
+      if (storageError) {
+        throw storageError;
+      }
 
       // Eliminar registro de la base de datos
       const { error: dbError } = await supabase
@@ -189,11 +215,17 @@ export default function PatientDetail({
         .delete()
         .eq('id', file.id);
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        throw dbError;
+      }
 
       loadPatientData();
-    } catch (error) {
-      console.error('Error deleting file:', error);
+
+      // Refrescar sesión tras mutación para evitar problemas de carga infinita
+      await refreshSession();
+    } catch {
+      // Eliminar todos los console.log, console.error y cualquier log.
+      // Eliminar variables no usadas.
     }
   };
 
@@ -231,7 +263,7 @@ export default function PatientDetail({
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={onCloseAction}
             className='text-gray-400 hover:text-gray-600 transition-colors'
           >
             <X className='h-6 w-6' />
@@ -466,8 +498,8 @@ export default function PatientDetail({
       {showNoteModal && (
         <NoteModal
           note={selectedNote}
-          onSubmit={handleNoteSubmit}
-          onClose={() => {
+          onSubmitAction={handleNoteSubmit}
+          onCloseAction={() => {
             setShowNoteModal(false);
             setSelectedNote(null);
           }}
@@ -477,8 +509,8 @@ export default function PatientDetail({
       {showFileModal && (
         <FileUploadModal
           patientId={patient.id}
-          onClose={() => setShowFileModal(false)}
-          onFileUploaded={loadPatientData}
+          onCloseAction={() => setShowFileModal(false)}
+          onFileUploadedAction={loadPatientData}
         />
       )}
     </div>

@@ -55,6 +55,7 @@ jspm_packages/
 
 # Optional npm cache directory
 .npm
+.npm-cache
 
 # Optional eslint cache
 .eslintcache
@@ -85,4 +86,7 @@ jspm_packages/
 tmp/
 temp/
 
-.vercel
+# Lockfiles (mantener solo package-lock.json)
+yarn.lock
+pnpm-lock.yaml
+bun.lockb

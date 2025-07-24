@@ -1,13 +1,21 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // Configuración para evitar problemas con rutas que contienen espacios
-  // Turbopack se desactiva desde package.json para evitar problemas con espacios
+  // Configuración optimizada para Next.js 15
   typescript: {
     ignoreBuildErrors: false,
   },
   eslint: {
     ignoreDuringBuilds: false,
+  },
+  // Configuración para mejorar el rendimiento
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@supabase/supabase-js'],
+  },
+  // Configuración de imágenes optimizada
+  images: {
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 60,
   },
 };
 

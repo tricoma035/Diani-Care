@@ -1,20 +1,18 @@
-import { useState, useRef, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/lib/i18n';
+import { supabase } from '@/lib/supabase';
 import {
-  X,
-  Globe,
+  Check,
   Database,
-  MessageSquarePlus,
-  Trash2,
+  Edit2,
+  Globe,
   Loader2,
   Menu,
-  Edit2,
-  Check,
+  MessageSquarePlus,
+  Trash2,
+  X,
 } from 'lucide-react';
-import { useI18n } from '@/lib/i18n';
-import { supabase, Patient, PatientNote, PatientFile } from '@/lib/supabase';
-import mammoth from 'mammoth';
-import Tesseract from 'tesseract.js';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEffect, useState } from 'react';
 
 interface ChatbotProps {
   onClose: () => void;
@@ -32,55 +30,27 @@ interface ChatConversation {
   created_at: string;
 }
 
-// Mejorar extractor de referencia de paciente para frases naturales y nombres compuestos
-function extractPatientReference(text: string): string | null {
-  // Buscar patrones como "de Juan Pérez", "sobre Juan", "de la paciente Ana María", etc.
-  const match = text.match(
-    /(?:de|sobre|about|del|de la|del paciente|de la paciente|del paciente|paciente|patient|nombre|name)\s+([\wáéíóúüñÁÉÍÓÚÜÑ\s']+)/i
-  );
-  if (match) {
-    return match[1].trim();
-  }
-  // Si no, buscar la última palabra relevante
-  const fallback = text.match(/([A-Za-záéíóúüñÁÉÍÓÚÜÑ']{3,})$/);
-  return fallback ? fallback[1] : null;
-}
-
-function extractFileReference(text: string): string | null {
-  // Busca palabras clave de archivo (radiografía, pdf, docx, imagen, etc.)
-  const match = text.match(
-    /(radiografía|imagen|pdf|docx|txt|archivo|file|prueba|resultados|scan|xray|image|document)/i
-  );
-  return match ? match[1] : null;
-}
-
 export default function Chatbot({ onClose }: ChatbotProps) {
   const { t, language } = useI18n();
-  const { appUser } = useAuth ? useAuth() : { appUser: null };
+  const { appUser, refreshSession } = useAuth();
   const [queryType, setQueryType] = useState<'db' | 'internet'>('db');
   const [messages, setMessages] = useState<
     { role: 'user' | 'bot'; text: string }[]
   >([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const patientContext = useRef<string | null>(null);
-  const [showChatbot, setShowChatbot] = useState(false);
-  // Estado para gestor de conversaciones
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [loadingConvs, setLoadingConvs] = useState(false);
-  const [savingConv, setSavingConv] = useState(false);
-  // Añadir estado para menú en móvil
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-  // Estado para edición de títulos
   const [editingConvId, setEditingConvId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
 
   // Cargar conversaciones del usuario al abrir el chatbot
   useEffect(() => {
-    if (!appUser) return;
+    if (!appUser) {
+      return;
+    }
     setLoadingConvs(true);
 
     const loadConversations = async () => {
@@ -109,24 +79,42 @@ export default function Chatbot({ onClose }: ChatbotProps) {
     };
 
     loadConversations();
-  }, [appUser, language]);
+  }, [appUser, language, t]);
+
+  // Guardar conversación automáticamente en la base de datos
+  const saveConversation = async (msgs: ChatMessage[]) => {
+    if (!appUser || !activeConvId) {
+      return;
+    }
+    // Validar formato de mensajes
+    if (!Array.isArray(msgs) || !msgs.every(m => m.role && m.text)) {
+      return;
+    }
+    try {
+      const { error: saveError } = await supabase
+        .from('chatbot_conversations')
+        .update({ messages: msgs })
+        .eq('id', activeConvId);
+      if (saveError) {
+      }
+    } catch {}
+  };
 
   // Guardar conversación actual al cerrar
   const handleClose = async () => {
-    if (appUser && activeConvId) {
-      setSavingConv(true);
-      await supabase
-        .from('chatbot_conversations')
-        .update({ messages })
-        .eq('id', activeConvId);
-      setSavingConv(false);
-    }
+    await saveConversation(messages);
+
+    // Refrescar sesión tras mutación para evitar problemas de carga infinita
+    await refreshSession();
+
     onClose();
   };
 
   // Crear nueva conversación
   const handleNewConversation = async () => {
-    if (!appUser) return;
+    if (!appUser) {
+      return;
+    }
     const { data, error } = await supabase
       .from('chatbot_conversations')
       .insert({
@@ -142,6 +130,9 @@ export default function Chatbot({ onClose }: ChatbotProps) {
       setConversations([data, ...conversations]);
       setActiveConvId(data.id);
       setMessages(data.messages);
+
+      // Refrescar sesión tras mutación para evitar problemas de carga infinita
+      await refreshSession();
     }
   };
 
@@ -153,19 +144,34 @@ export default function Chatbot({ onClose }: ChatbotProps) {
 
   // Eliminar conversación
   const handleDeleteConversation = async (convId: string) => {
-    await supabase.from('chatbot_conversations').delete().eq('id', convId);
-    setConversations(conversations.filter(c => c.id !== convId));
-    if (activeConvId === convId) {
-      if (conversations.length > 1) {
-        const next = conversations.find(c => c.id !== convId);
-        setActiveConvId(next?.id || null);
-        setMessages(
-          next?.messages || [{ role: 'bot', text: t('chatbot.welcome') }]
-        );
-      } else {
-        setActiveConvId(null);
-        setMessages([{ role: 'bot', text: t('chatbot.welcome') }]);
+    if (!confirm('¿Estás seguro de que quieres eliminar esta conversación?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('chatbot_conversations')
+        .delete()
+        .eq('id', convId);
+
+      if (!error) {
+        setConversations(conversations.filter(c => c.id !== convId));
+        if (activeConvId === convId) {
+          if (conversations.length > 1) {
+            const remainingConvs = conversations.filter(c => c.id !== convId);
+            setActiveConvId(remainingConvs[0].id);
+            setMessages(remainingConvs[0].messages);
+          } else {
+            setActiveConvId(null);
+            setMessages([{ role: 'bot', text: t('chatbot.welcome') }]);
+          }
+        }
+
+        // Refrescar sesión tras mutación para evitar problemas de carga infinita
+        await refreshSession();
       }
+    } catch {
+      // Manejar error
     }
   };
 
@@ -177,7 +183,9 @@ export default function Chatbot({ onClose }: ChatbotProps) {
 
   // Función para guardar título editado
   const handleSaveConversationTitle = async () => {
-    if (!editingConvId || !editingTitle.trim()) return;
+    if (!editingConvId || !editingTitle.trim()) {
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -185,7 +193,9 @@ export default function Chatbot({ onClose }: ChatbotProps) {
         .update({ title: editingTitle.trim() })
         .eq('id', editingConvId);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       // Actualizar estado local
       setConversations(convs =>
@@ -198,9 +208,7 @@ export default function Chatbot({ onClose }: ChatbotProps) {
 
       setEditingConvId(null);
       setEditingTitle('');
-    } catch (error) {
-      console.error('Error updating conversation title:', error);
-    }
+    } catch {}
   };
 
   // Función para cancelar edición
@@ -216,49 +224,12 @@ export default function Chatbot({ onClose }: ChatbotProps) {
       ? 'Wewe ni msaidizi wa kitaalamu. Jibu kwa ufupi, kwa mpangilio na kwa Kiswahili. Tumia orodha na uweke mambo muhimu wazi.'
       : 'You are a professional assistant. Answer clearly, concisely, and in a schematic way. Use lists and highlight key points. Always answer in English.';
 
-  // 1. PDF.js: establecer workerSrc correctamente en el cliente
-  async function extractTextFromPDF(blob: Blob): Promise<string> {
-    if (typeof window === 'undefined')
-      throw new Error('PDF extraction solo disponible en el cliente');
-    const pdfjsLib = await import('pdfjs-dist/build/pdf');
-    if (pdfjsLib.GlobalWorkerOptions) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${
-        pdfjsLib.version || '4.2.67'
-      }/pdf.worker.min.js`;
-    }
-    const arrayBuffer = await blob.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    let text = '';
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      text += content.items.map((item: any) => item.str).join(' ') + '\n';
-    }
-    return text;
-  }
-
-  async function extractTextFromDOCX(blob: Blob): Promise<string> {
-    const arrayBuffer = await blob.arrayBuffer();
-    const result = await mammoth.extractRawText({ arrayBuffer });
-    return result.value;
-  }
-
-  async function extractTextFromImage(blob: Blob): Promise<string> {
-    const image = URL.createObjectURL(blob);
-    // Tesseract soporta jpg, jpeg, png, bmp, gif, tiff
-    const { data } = await Tesseract.recognize(
-      image,
-      language === 'es' ? 'spa' : language === 'sw' ? 'swa' : 'eng'
-    );
-    URL.revokeObjectURL(image);
-    return data.text;
-  }
-
   // Enviar queryType explícitamente al backend
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
-    if (!input.trim()) return;
-    setError('');
+    if (!input.trim()) {
+      return;
+    }
     setLoading(true);
 
     // Añadir mensaje del usuario al estado local
@@ -285,7 +256,9 @@ export default function Chatbot({ onClose }: ChatbotProps) {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Error');
+      if (!res.ok) {
+        throw new Error(data.error || 'Error');
+      }
 
       // Añadir respuesta del bot al estado local
       const botMessage = { role: 'bot' as const, text: data.content };
@@ -293,19 +266,8 @@ export default function Chatbot({ onClose }: ChatbotProps) {
       setMessages(finalMessages);
 
       // Guardar conversación automáticamente en la base de datos
-      if (appUser && activeConvId) {
-        try {
-          await supabase
-            .from('chatbot_conversations')
-            .update({ messages: finalMessages })
-            .eq('id', activeConvId);
-        } catch (saveError) {
-          console.error('Error guardando conversación:', saveError);
-          setError('Error al guardar la conversación');
-        }
-      }
-    } catch (err: any) {
-      setError(err.message || 'Error');
+      await saveConversation(finalMessages);
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -436,7 +398,7 @@ export default function Chatbot({ onClose }: ChatbotProps) {
                 onClick={handleClose}
                 className='text-gray-400 hover:text-blue-600 transition-colors'
               >
-                {savingConv ? (
+                {loading ? (
                   <Loader2 className='animate-spin h-6 w-6' />
                 ) : (
                   <X className='h-6 w-6' />
@@ -501,11 +463,6 @@ export default function Chatbot({ onClose }: ChatbotProps) {
                 <div className='rounded-2xl px-5 py-3 max-w-lg bg-gray-100 text-gray-400 shadow'>
                   ...
                 </div>
-              </div>
-            )}
-            {error && (
-              <div className='text-red-600 text-sm text-center mt-2'>
-                {error}
               </div>
             )}
           </div>

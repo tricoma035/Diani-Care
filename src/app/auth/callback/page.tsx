@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, Loader2, XCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function AuthCallback() {
   const router = useRouter();
@@ -35,7 +35,7 @@ export default function AuthCallback() {
           setStatus('error');
           setMessage('No se pudo verificar la cuenta');
         }
-      } catch (error) {
+      } catch {
         setStatus('error');
         setMessage('Error inesperado');
       }

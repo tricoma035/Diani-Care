@@ -1,28 +1,28 @@
 'use client';
 
-import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
-import { X, Upload, File, AlertCircle } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
+import { supabase } from '@/lib/supabase';
+import { AlertCircle, File, Upload, X } from 'lucide-react';
+import { useState } from 'react';
 
 interface FileUploadModalProps {
   patientId: string;
-  onClose: () => void;
-  onFileUploaded: () => void;
+  onCloseAction: () => void;
+  onFileUploadedAction: () => void;
 }
 
 export default function FileUploadModal({
   patientId,
-  onClose,
-  onFileUploaded,
+  onCloseAction,
+  onFileUploadedAction,
 }: FileUploadModalProps) {
-  const { appUser } = useAuth();
+  const { appUser, refreshSession } = useAuth();
   const { t } = useI18n();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [error, setError] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState('');
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -57,7 +57,9 @@ export default function FileUploadModal({
   };
 
   const handleUpload = async () => {
-    if (!selectedFile || !appUser) return;
+    if (!selectedFile || !appUser) {
+      return;
+    }
 
     try {
       setIsUploading(true);
@@ -76,7 +78,9 @@ export default function FileUploadModal({
           upsert: false,
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        throw uploadError;
+      }
 
       setUploadProgress(50);
 
@@ -94,16 +98,43 @@ export default function FileUploadModal({
         },
       ]);
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        throw dbError;
+      }
+
+      setUploadProgress(90);
+
+      // Procesar y extraer contenido del archivo
+      try {
+        const processResponse = await fetch('/api/process-file', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            fileUrl: fileName,
+            fileName: selectedFile.name,
+            patientId,
+          }),
+        });
+
+        const processResult = await processResponse.json();
+
+        if (processResult.success) {
+        } else {
+        }
+      } catch (error) {}
 
       setUploadProgress(100);
 
       // Limpiar y cerrar
       setSelectedFile(null);
-      onFileUploaded();
-      onClose();
+      onFileUploadedAction();
+      onCloseAction();
+
+      // Refrescar sesión tras mutación para evitar problemas de carga infinita
+      await refreshSession();
     } catch (error) {
-      console.error('Error uploading file:', error);
       setError('Error al subir el archivo. Por favor, intenta de nuevo.');
     } finally {
       setIsUploading(false);
@@ -147,7 +178,7 @@ export default function FileUploadModal({
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={onCloseAction}
             className='text-gray-400 hover:text-gray-600 transition-colors'
           >
             <X className='h-6 w-6' />
@@ -229,7 +260,13 @@ export default function FileUploadModal({
           {isUploading && (
             <div className='mt-6'>
               <div className='flex items-center justify-between text-sm text-gray-600 mb-2'>
-                <span>{t('files.uploading')}</span>
+                <span>
+                  {uploadProgress < 50
+                    ? t('files.uploading')
+                    : uploadProgress < 90
+                    ? 'Guardando archivo...'
+                    : 'Procesando contenido...'}
+                </span>
                 <span>{uploadProgress}%</span>
               </div>
               <div className='w-full bg-gray-200 rounded-full h-2'>
@@ -258,7 +295,7 @@ export default function FileUploadModal({
         {/* Buttons */}
         <div className='flex items-center justify-end space-x-3 p-6 border-t'>
           <button
-            onClick={onClose}
+            onClick={onCloseAction}
             disabled={isUploading}
             className='px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50'
           >
