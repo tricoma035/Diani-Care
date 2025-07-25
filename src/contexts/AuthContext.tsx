@@ -219,7 +219,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    initializeAuth();
+    // Pequeño delay para asegurar que el cliente esté listo
+    const timer = setTimeout(() => {
+      initializeAuth();
+    }, 100);
 
     // Escuchar cambios en la autenticación (simplificado)
     const {
@@ -252,6 +255,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false;
+      clearTimeout(timer);
       subscription.unsubscribe();
     };
   }, [fetchAppUser]);
