@@ -96,8 +96,11 @@ export default function Chatbot({ onClose }: ChatbotProps) {
         .update({ messages: msgs })
         .eq('id', activeConvId);
       if (saveError) {
+        // Error al guardar conversación
       }
-    } catch {}
+    } catch {
+      // Error al guardar mensaje
+    }
   };
 
   // Guardar conversación actual al cerrar
@@ -198,7 +201,9 @@ export default function Chatbot({ onClose }: ChatbotProps) {
 
       setEditingConvId(null);
       setEditingTitle('');
-    } catch {}
+    } catch {
+      // Error al guardar título de conversación
+    }
   };
 
   // Función para cancelar edición
@@ -258,6 +263,7 @@ export default function Chatbot({ onClose }: ChatbotProps) {
       // Guardar conversación automáticamente en la base de datos
       await saveConversation(finalMessages);
     } catch {
+      // Error al enviar mensaje
     } finally {
       setLoading(false);
     }

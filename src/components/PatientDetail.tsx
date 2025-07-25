@@ -82,8 +82,7 @@ export default function PatientDetail({
       setNotes(notesData || []);
       setFiles(filesData || []);
     } catch {
-      // Eliminar todos los console.log, console.error y cualquier log.
-      // Eliminar variables no usadas.
+      // Error al cargar datos del paciente
     } finally {
       setLoading(false);
     }
@@ -127,8 +126,7 @@ export default function PatientDetail({
       // Recargar datos inmediatamente
       await loadPatientData();
     } catch {
-      // Eliminar todos los console.log, console.error y cualquier log.
-      // Eliminar variables no usadas.
+      // Error al procesar nota
     }
   };
 
@@ -150,8 +148,7 @@ export default function PatientDetail({
 
       loadPatientData();
     } catch {
-      // Eliminar todos los console.log, console.error y cualquier log.
-      // Eliminar variables no usadas.
+      // Error al eliminar nota
     }
   };
 
@@ -213,9 +210,6 @@ export default function PatientDetail({
       }
 
       loadPatientData();
-
-      // Recargar datos después de eliminar archivo
-      await loadPatientData();
     } catch {
       // Error al eliminar archivo
     }

@@ -1,16 +1,23 @@
 'use client';
 
-import { I18nProvider } from '@/lib/i18n';
-import { useAuth } from '@/contexts/AuthContext';
-import LoginPage from '@/components/LoginPage';
 import Dashboard from '@/components/Dashboard';
 import LanguageSelector from '@/components/LanguageSelector';
+import LoginPage from '@/components/LoginPage';
+import { useAuth } from '@/contexts/AuthContext';
+import { I18nProvider } from '@/lib/i18n';
+import { useEffect, useState } from 'react';
 
 export default function Home() {
   const { user, appUser, loading } = useAuth();
+  const [isClient, setIsClient] = useState(false);
 
-  // Mostrar loading mientras se verifica la autenticación
-  if (loading) {
+  // Evitar problemas de hidratación
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Mostrar loading mientras se verifica la autenticación o durante la hidratación
+  if (loading || !isClient) {
     return (
       <I18nProvider>
         <div className='min-h-screen flex items-center justify-center bg-gray-50'>

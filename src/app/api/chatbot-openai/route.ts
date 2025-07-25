@@ -422,7 +422,9 @@ Tienes acceso al historial completo de la conversación para mantener contexto.`
           .join('\n\n');
       } else {
       }
-    } catch {}
+    } catch {
+      // Error al procesar búsqueda web
+    }
   }
 
   const systemPromptWithWeb = `${systemPrompt}

@@ -33,7 +33,6 @@ interface AuthContextType {
   ) => Promise<{ error: unknown }>;
   signOut: () => Promise<void>;
   changePassword: (newPassword: string) => Promise<{ error: unknown }>;
-  refreshSession: () => Promise<void>;
 }
 
 // Crear el contexto
@@ -91,44 +90,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Error al obtener datos del usuario
     }
   }, []);
-
-  // Función para refrescar la sesión (optimizada para producción)
-  const refreshSession = useCallback(async () => {
-    try {
-      // Solo refrescar si es necesario (evitar llamadas innecesarias)
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.refreshSession();
-
-      if (error) {
-        // Si hay error al refrescar, intentar obtener sesión actual
-        const {
-          data: { session: currentSession },
-        } = await supabase.auth.getSession();
-
-        if (currentSession?.user) {
-          setUser(currentSession.user);
-          await fetchAppUser(currentSession.user.id);
-        } else {
-          // No hay sesión válida, limpiar estado
-          setUser(null);
-          setAppUser(null);
-        }
-      } else if (session?.user) {
-        setUser(session.user);
-        await fetchAppUser(session.user.id);
-      } else {
-        // No hay sesión válida, limpiar estado
-        setUser(null);
-        setAppUser(null);
-      }
-    } catch {
-      // Error al refrescar sesión, limpiar estado
-      setUser(null);
-      setAppUser(null);
-    }
-  }, [fetchAppUser]);
 
   // Función de inicio de sesión
   const signIn = async (email: string, password: string) => {
@@ -234,12 +195,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Verificar sesión al cargar (mejorado para producción)
+  // Verificar sesión al cargar (optimizado para evitar conflictos)
   useEffect(() => {
     let mounted = true;
 
-    const getSession = async () => {
+    const initializeAuth = async () => {
       try {
+        // Obtener sesión inicial
         const {
           data: { session },
         } = await supabase.auth.getSession();
@@ -257,9 +219,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    getSession();
+    initializeAuth();
 
-    // Escuchar cambios en la autenticación (mejorado)
+    // Escuchar cambios en la autenticación (simplificado)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -267,29 +229,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      if (event === 'SIGNED_IN' && session?.user) {
-        setUser(session.user);
-        await fetchAppUser(session.user.id);
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setAppUser(null);
-      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-        setUser(session.user);
-        await fetchAppUser(session.user.id);
-      } else if (event === 'USER_UPDATED' && session?.user) {
-        setUser(session.user);
-        await fetchAppUser(session.user.id);
+      switch (event) {
+        case 'SIGNED_IN':
+          if (session?.user) {
+            setUser(session.user);
+            await fetchAppUser(session.user.id);
+          }
+          break;
+        case 'SIGNED_OUT':
+          setUser(null);
+          setAppUser(null);
+          break;
+        case 'TOKEN_REFRESHED':
+        case 'USER_UPDATED':
+          if (session?.user) {
+            setUser(session.user);
+            // No recargar appUser para evitar loops
+          }
+          break;
       }
 
-      // Siempre asegurar que loading se ponga en false
-      setLoading(false);
+      // Solo establecer loading en false si no se ha hecho ya
+      if (mounted && loading) {
+        setLoading(false);
+      }
     });
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchAppUser]);
+  }, [fetchAppUser, loading]);
 
   const value = {
     user,
@@ -299,7 +269,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signOut,
     changePassword,
-    refreshSession,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

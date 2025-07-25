@@ -1,5 +1,20 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+
+// Inicializar Supabase admin client con la service role key (solo backend)
+if (
+  !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  !process.env.SUPABASE_SERVICE_ROLE_KEY
+) {
+  throw new Error(
+    'Supabase URL o Service Role Key no configuradas en el entorno.'
+  );
+}
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 // Función para extraer texto de diferentes tipos de archivos
 async function extractTextFromFile(

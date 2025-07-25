@@ -66,7 +66,11 @@ const config: Config = {
   },
   plugins: [
     // Plugin para mejorar la accesibilidad
-    function ({ addUtilities }: any) {
+    function ({
+      addUtilities,
+    }: {
+      addUtilities: (utilities: Record<string, Record<string, string>>) => void;
+    }) {
       const newUtilities = {
         '.sr-only': {
           position: 'absolute',

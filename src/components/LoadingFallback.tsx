@@ -1,6 +1,5 @@
 'use client';
 
-import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, RefreshCw } from 'lucide-react';
 
 interface LoadingFallbackProps {
@@ -14,13 +13,12 @@ export default function LoadingFallback({
   showRetry = false,
   onRetry,
 }: LoadingFallbackProps) {
-  const { refreshSession } = useAuth();
-
   const handleRetry = async () => {
     if (onRetry) {
       onRetry();
     } else {
-      await refreshSession();
+      // Recargar la página como fallback
+      window.location.reload();
     }
   };
 
