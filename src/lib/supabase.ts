@@ -21,7 +21,7 @@ export const supabase = createClient(
     // Configuración optimizada para estabilidad en producción
     realtime: {
       params: {
-        eventsPerSecond: 5, // Reducido para evitar sobrecarga
+        eventsPerSecond: 3, // Reducido aún más para evitar sobrecarga
       },
     },
   }

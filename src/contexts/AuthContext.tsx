@@ -248,18 +248,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           break;
       }
-
-      // Solo establecer loading en false si no se ha hecho ya
-      if (mounted && loading) {
-        setLoading(false);
-      }
     });
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchAppUser, loading]);
+  }, [fetchAppUser]);
 
   const value = {
     user,

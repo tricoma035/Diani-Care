@@ -24,6 +24,11 @@ export default function Home() {
           <div className='text-center'>
             <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto'></div>
             <p className='mt-4 text-gray-600'>Cargando...</p>
+            <p className='mt-2 text-sm text-gray-500'>
+              {loading
+                ? 'Verificando autenticación...'
+                : 'Inicializando aplicación...'}
+            </p>
           </div>
         </div>
       </I18nProvider>
