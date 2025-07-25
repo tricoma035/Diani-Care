@@ -79,10 +79,19 @@ async function extractTextFromFile(
     if (fileExtension === 'pdf') {
       try {
         const arrayBuffer = await data.arrayBuffer();
-        const pdfParse = await import('pdf-parse');
-        const buffer = Buffer.from(arrayBuffer);
 
-        // Usar la función correcta de pdf-parse
+        // Verificar que el buffer no esté vacío
+        if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+          return {
+            content: 'PDF vacío o no descargado correctamente.',
+            fileType: 'pdf',
+          };
+        }
+
+        // Usar pdf-parse importando directamente el módulo interno para evitar código de prueba
+        // @ts-expect-error: Importación directa del módulo interno de pdf-parse
+        const pdfParse = await import('pdf-parse/lib/pdf-parse.js');
+        const buffer = Buffer.from(arrayBuffer);
         const pdfData = await pdfParse.default(buffer);
 
         if (pdfData.text && pdfData.text.trim().length > 0) {
