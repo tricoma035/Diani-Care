@@ -19,7 +19,8 @@ const supabase = createClient(
 // Función para extraer texto de diferentes tipos de archivos
 async function extractTextFromFile(
   fileUrl: string,
-  fileName: string
+  fileName: string,
+  patientId?: string
 ): Promise<{ content: string; fileType: string }> {
   try {
     const filePath = fileUrl.replace(
@@ -41,7 +42,38 @@ async function extractTextFromFile(
     // TXT
     if (fileExtension === 'txt') {
       const text = await data.text();
-      return { content: text, fileType: 'txt' };
+      if (text && text.trim().length > 0) {
+        // Dividir el contenido en chunks de máximo 1000 caracteres
+        const trimmedText = text.trim();
+        const chunks = [];
+        for (let i = 0; i < trimmedText.length; i += 1000) {
+          chunks.push(trimmedText.slice(i, i + 1000));
+        }
+
+        // Guardar cada chunk como un registro separado
+        for (let i = 0; i < chunks.length; i++) {
+          const chunkContent = chunks[i];
+          const { error: chunkError } = await supabase
+            .from('file_contents')
+            .insert({
+              file_path: fileUrl,
+              file_name: `${fileName} (parte ${i + 1}/${chunks.length})`,
+              file_type: 'txt',
+              content: chunkContent,
+              patient_id: patientId,
+            });
+
+          if (chunkError) {
+            // Error guardando chunk TXT
+          }
+        }
+
+        return {
+          content: `TXT procesado correctamente. ${chunks.length} partes extraídas.`,
+          fileType: 'txt',
+        };
+      }
+      return { content: 'Archivo TXT vacío o sin contenido.', fileType: 'txt' };
     }
     // PDF
     if (fileExtension === 'pdf') {
@@ -50,16 +82,48 @@ async function extractTextFromFile(
         const pdfParse = await import('pdf-parse');
         const buffer = Buffer.from(arrayBuffer);
         const pdfData = await pdfParse.default(buffer);
+
         if (pdfData.text && pdfData.text.trim().length > 0) {
-          return { content: pdfData.text, fileType: 'pdf' };
+          // Dividir el contenido en chunks de máximo 1000 caracteres
+          const text = pdfData.text.trim();
+          const chunks = [];
+          for (let i = 0; i < text.length; i += 1000) {
+            chunks.push(text.slice(i, i + 1000));
+          }
+
+          // Guardar cada chunk como un registro separado
+          for (let i = 0; i < chunks.length; i++) {
+            const chunkContent = chunks[i];
+            const { error: chunkError } = await supabase
+              .from('file_contents')
+              .insert({
+                file_path: fileUrl,
+                file_name: `${fileName} (parte ${i + 1}/${chunks.length})`,
+                file_type: 'pdf',
+                content: chunkContent,
+                patient_id: patientId,
+              });
+
+            if (chunkError) {
+              // Error guardando chunk
+            }
+          }
+
+          return {
+            content: `PDF procesado correctamente. ${chunks.length} partes extraídas.`,
+            fileType: 'pdf',
+          };
         }
+
         return {
           content: 'PDF subido. No se pudo extraer texto automáticamente.',
           fileType: 'pdf',
         };
-      } catch {
+      } catch (error) {
         return {
-          content: 'PDF subido. No se pudo extraer texto automáticamente.',
+          content: `Error procesando PDF: ${
+            error instanceof Error ? error.message : 'Error desconocido'
+          }`,
           fileType: 'pdf',
         };
       }
@@ -70,15 +134,48 @@ async function extractTextFromFile(
         const arrayBuffer = await data.arrayBuffer();
         const mammoth = await import('mammoth');
         const result = await mammoth.default.extractRawText({ arrayBuffer });
-        return {
-          content:
-            result.value ||
-            'DOCX subido. No se pudo extraer texto automáticamente.',
-          fileType: 'docx',
-        };
-      } catch {
+
+        if (result.value && result.value.trim().length > 0) {
+          // Dividir el contenido en chunks de máximo 1000 caracteres
+          const text = result.value.trim();
+          const chunks = [];
+          for (let i = 0; i < text.length; i += 1000) {
+            chunks.push(text.slice(i, i + 1000));
+          }
+
+          // Guardar cada chunk como un registro separado
+          for (let i = 0; i < chunks.length; i++) {
+            const chunkContent = chunks[i];
+            const { error: chunkError } = await supabase
+              .from('file_contents')
+              .insert({
+                file_path: fileUrl,
+                file_name: `${fileName} (parte ${i + 1}/${chunks.length})`,
+                file_type: 'docx',
+                content: chunkContent,
+                patient_id: patientId,
+              });
+
+            if (chunkError) {
+              // Error guardando chunk DOCX
+            }
+          }
+
+          return {
+            content: `DOCX procesado correctamente. ${chunks.length} partes extraídas.`,
+            fileType: 'docx',
+          };
+        }
+
         return {
           content: 'DOCX subido. No se pudo extraer texto automáticamente.',
+          fileType: 'docx',
+        };
+      } catch (error) {
+        return {
+          content: `Error procesando DOCX: ${
+            error instanceof Error ? error.message : 'Error desconocido'
+          }`,
           fileType: 'docx',
         };
       }
@@ -100,7 +197,35 @@ async function extractTextFromFile(
         );
         await worker.terminate();
         if (ocrData.text && ocrData.text.trim().length > 0) {
-          return { content: ocrData.text, fileType: fileExtension };
+          // Dividir el contenido en chunks de máximo 1000 caracteres
+          const text = ocrData.text.trim();
+          const chunks = [];
+          for (let i = 0; i < text.length; i += 1000) {
+            chunks.push(text.slice(i, i + 1000));
+          }
+
+          // Guardar cada chunk como un registro separado
+          for (let i = 0; i < chunks.length; i++) {
+            const chunkContent = chunks[i];
+            const { error: chunkError } = await supabase
+              .from('file_contents')
+              .insert({
+                file_path: fileUrl,
+                file_name: `${fileName} (parte ${i + 1}/${chunks.length})`,
+                file_type: fileExtension,
+                content: chunkContent,
+                patient_id: patientId,
+              });
+
+            if (chunkError) {
+              // Error guardando chunk imagen
+            }
+          }
+
+          return {
+            content: `Imagen procesada correctamente. ${chunks.length} partes extraídas.`,
+            fileType: fileExtension,
+          };
         }
         return {
           content: 'Imagen subida. No se pudo extraer texto automáticamente.',
@@ -136,20 +261,29 @@ export async function POST(req: NextRequest) {
       );
     }
     // Extraer contenido del archivo
-    const { content, fileType } = await extractTextFromFile(fileUrl, fileName);
-    // Guardar SIEMPRE un registro en la base de datos
-    const { error: insertError } = await supabase.from('file_contents').insert({
-      file_path: fileUrl,
-      file_name: fileName,
-      file_type: fileType,
-      content,
-      patient_id: patientId,
-    });
-    if (insertError) {
-      return NextResponse.json(
-        { error: 'Error guardando contenido del archivo' },
-        { status: 500 }
-      );
+    const { content, fileType } = await extractTextFromFile(
+      fileUrl,
+      fileName,
+      patientId
+    );
+
+    // Solo guardar un registro adicional si no se guardaron chunks (para archivos no soportados)
+    if (!content.includes('procesado correctamente')) {
+      const { error: insertError } = await supabase
+        .from('file_contents')
+        .insert({
+          file_path: fileUrl,
+          file_name: fileName,
+          file_type: fileType,
+          content,
+          patient_id: patientId,
+        });
+      if (insertError) {
+        return NextResponse.json(
+          { error: 'Error guardando contenido del archivo' },
+          { status: 500 }
+        );
+      }
     }
     return NextResponse.json({
       success: true,

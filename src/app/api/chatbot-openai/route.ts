@@ -84,15 +84,18 @@ async function extractTextFromFile(
 
     // Convertir a texto según el tipo de archivo
     if (fileExtension === 'txt') {
-      // Buscar contenido ya extraído en la base de datos
-      const { data: existingContent } = await supabase
+      // Buscar contenido ya extraído en la base de datos (todos los chunks)
+      const { data: existingContents } = await supabase
         .from('file_contents')
-        .select('content')
+        .select('content, file_name')
         .eq('file_path', fileUrl)
-        .single();
+        .order('file_name');
 
-      if (existingContent?.content) {
-        return `CONTENIDO DEL ARCHIVO DE TEXTO "${fileName}":\n\n${existingContent.content}`;
+      if (existingContents && existingContents.length > 0) {
+        const fullContent = existingContents
+          .map(chunk => chunk.content)
+          .join('\n\n');
+        return `CONTENIDO DEL ARCHIVO DE TEXTO "${fileName}":\n\n${fullContent}`;
       } else {
         const text = await data.text();
         return text;
@@ -101,18 +104,18 @@ async function extractTextFromFile(
       try {
         const arrayBuffer = await data.arrayBuffer();
 
-        // Buscar contenido ya extraído en la base de datos
-        const { data: existingContent } = await supabase
+        // Buscar contenido ya extraído en la base de datos (todos los chunks)
+        const { data: existingContents } = await supabase
           .from('file_contents')
-          .select('content')
+          .select('content, file_name')
           .eq('file_path', fileUrl)
-          .single();
+          .order('file_name');
 
-        if (existingContent?.content) {
-          return `CONTENIDO DEL PDF "${fileName}":\n\n${existingContent.content.substring(
-            0,
-            1000
-          )}${existingContent.content.length > 1000 ? '...' : ''}`;
+        if (existingContents && existingContents.length > 0) {
+          const fullContent = existingContents
+            .map(chunk => chunk.content)
+            .join('\n\n');
+          return `CONTENIDO DEL PDF "${fileName}":\n\n${fullContent}`;
         } else {
           return `PDF "${fileName}" - Tamaño: ${Math.ceil(
             arrayBuffer.byteLength / 1000
@@ -127,11 +130,23 @@ async function extractTextFromFile(
       try {
         const arrayBuffer = await data.arrayBuffer();
 
-        // Por ahora, devolvemos información básica de la imagen
-        // En producción se implementaría con una librería compatible con Next.js
-        return `IMAGEN "${fileName}" - Tamaño: ${Math.ceil(
-          arrayBuffer.byteLength / 1000
-        )}KB - Estado: Archivo de imagen disponible para análisis. El contenido de la imagen está disponible para revisión manual.`;
+        // Buscar contenido ya extraído en la base de datos (todos los chunks)
+        const { data: existingContents } = await supabase
+          .from('file_contents')
+          .select('content, file_name')
+          .eq('file_path', fileUrl)
+          .order('file_name');
+
+        if (existingContents && existingContents.length > 0) {
+          const fullContent = existingContents
+            .map(chunk => chunk.content)
+            .join('\n\n');
+          return `CONTENIDO DE LA IMAGEN "${fileName}" (OCR):\n\n${fullContent}`;
+        } else {
+          return `IMAGEN "${fileName}" - Tamaño: ${Math.ceil(
+            arrayBuffer.byteLength / 1000
+          )}KB - Estado: Archivo de imagen disponible para análisis. El contenido de la imagen está disponible para revisión manual.`;
+        }
       } catch (imgError) {
         return `Error procesando imagen ${fileName}: ${imgError}`;
       }
@@ -139,18 +154,18 @@ async function extractTextFromFile(
       try {
         const arrayBuffer = await data.arrayBuffer();
 
-        // Buscar contenido ya extraído en la base de datos
-        const { data: existingContent } = await supabase
+        // Buscar contenido ya extraído en la base de datos (todos los chunks)
+        const { data: existingContents } = await supabase
           .from('file_contents')
-          .select('content')
+          .select('content, file_name')
           .eq('file_path', fileUrl)
-          .single();
+          .order('file_name');
 
-        if (existingContent?.content) {
-          return `CONTENIDO DEL DOCX "${fileName}":\n\n${existingContent.content.substring(
-            0,
-            1000
-          )}${existingContent.content.length > 1000 ? '...' : ''}`;
+        if (existingContents && existingContents.length > 0) {
+          const fullContent = existingContents
+            .map(chunk => chunk.content)
+            .join('\n\n');
+          return `CONTENIDO DEL DOCX "${fileName}":\n\n${fullContent}`;
         } else {
           return `DOCX "${fileName}" - Tamaño: ${Math.ceil(
             arrayBuffer.byteLength / 1000
