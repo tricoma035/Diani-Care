@@ -81,6 +81,8 @@ async function extractTextFromFile(
         const arrayBuffer = await data.arrayBuffer();
         const pdfParse = await import('pdf-parse');
         const buffer = Buffer.from(arrayBuffer);
+
+        // Usar la función correcta de pdf-parse
         const pdfData = await pdfParse.default(buffer);
 
         if (pdfData.text && pdfData.text.trim().length > 0) {
@@ -133,7 +135,9 @@ async function extractTextFromFile(
       try {
         const arrayBuffer = await data.arrayBuffer();
         const mammoth = await import('mammoth');
-        const result = await mammoth.default.extractRawText({ arrayBuffer });
+        const result = await mammoth.default.extractRawText({
+          buffer: Buffer.from(arrayBuffer),
+        });
 
         if (result.value && result.value.trim().length > 0) {
           // Dividir el contenido en chunks de máximo 1000 caracteres
