@@ -215,13 +215,6 @@ export default function Dashboard() {
             <div className='flex items-center space-x-4'>
               <LanguageSelector />
               <button
-                onClick={() => setShowChatbot(true)}
-                className='flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-medical hover:bg-primary-700 transition-colors'
-              >
-                <MessageCircle className='h-4 w-4' />
-                <span>{t('dashboard.chatbot')}</span>
-              </button>
-              <button
                 onClick={signOut}
                 className='flex items-center space-x-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-medical hover:bg-gray-300 transition-colors'
               >
@@ -237,7 +230,7 @@ export default function Dashboard() {
       <main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
         {/* Search and Filters */}
         <div className='mb-6 flex flex-col sm:flex-row gap-4'>
-          <div className='flex-1'>
+          <div className='flex-1 max-w-md'>
             <div className='relative'>
               <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
               <input
@@ -297,6 +290,13 @@ export default function Dashboard() {
             >
               <Plus className='h-4 w-4' />
               <span>{t('dashboard.addPatient')}</span>
+            </button>
+            <button
+              onClick={() => setShowChatbot(true)}
+              className='flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-medical hover:bg-primary-700 transition-colors'
+            >
+              <MessageCircle className='h-4 w-4' />
+              <span>{t('dashboard.chatbot')}</span>
             </button>
           </div>
         </div>
